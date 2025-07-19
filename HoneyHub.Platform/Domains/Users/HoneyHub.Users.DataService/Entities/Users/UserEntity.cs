@@ -36,7 +36,7 @@ public class UserEntity : BaseEntity
 	private const int DefaultSubscriptionPlanId = 1;
 
 	// Subscription Management
-	public required int SubscriptionPlanId { get; set; } = DefaultSubscriptionPlanId;
+	public int SubscriptionPlanId { get; set; } = DefaultSubscriptionPlanId;
 
 	// Audit Fields (additional to BaseEntity)
 	public DateTime? LastLoginAt { get; set; }
