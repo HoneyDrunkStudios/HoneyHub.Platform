@@ -20,8 +20,8 @@ public class BaseContext : DbContext
 
 	private void ConfigureMapping(ModelBuilder modelBuilder)
 	{
-		var maps = Assembly.GetExecutingAssembly()
-			.GetTypes()
+		var maps = AppDomain.CurrentDomain.GetAssemblies()
+			.SelectMany(assembly => assembly.GetTypes())
 			.Where(x => x.GetInterfaces()
 			.Contains(typeof(IEntityMap)));
 
