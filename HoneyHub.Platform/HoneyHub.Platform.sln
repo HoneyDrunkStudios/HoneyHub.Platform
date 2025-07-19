@@ -1,0 +1,58 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36221.1 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Platform.AppHost", "Shared\HoneyHub.Platform.AppHost\HoneyHub.Platform.AppHost.csproj", "{446A17F2-5F60-4122-88E6-D1786717885D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Platform.ServiceDefaults", "Shared\HoneyHub.Platform.ServiceDefaults\HoneyHub.Platform.ServiceDefaults.csproj", "{EAA7F2D4-6B55-852B-174C-0814BEF265ED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Platform.ApiService", "Shared\HoneyHub.Platform.ApiService\HoneyHub.Platform.ApiService.csproj", "{C8D33BF3-F22E-395B-C6D7-C83544B95108}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Platform.Web", "Shared\HoneyHub.Platform.Web\HoneyHub.Platform.Web.csproj", "{F65A50B9-C956-83F7-4E63-19344168501D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Platform.Tests", "Shared\HoneyHub.Platform.Tests\HoneyHub.Platform.Tests.csproj", "{A58B9508-148A-7F42-1CDD-DBD9509343CA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{446A17F2-5F60-4122-88E6-D1786717885D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{446A17F2-5F60-4122-88E6-D1786717885D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{446A17F2-5F60-4122-88E6-D1786717885D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{446A17F2-5F60-4122-88E6-D1786717885D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAA7F2D4-6B55-852B-174C-0814BEF265ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAA7F2D4-6B55-852B-174C-0814BEF265ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAA7F2D4-6B55-852B-174C-0814BEF265ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAA7F2D4-6B55-852B-174C-0814BEF265ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8D33BF3-F22E-395B-C6D7-C83544B95108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8D33BF3-F22E-395B-C6D7-C83544B95108}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8D33BF3-F22E-395B-C6D7-C83544B95108}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8D33BF3-F22E-395B-C6D7-C83544B95108}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F65A50B9-C956-83F7-4E63-19344168501D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F65A50B9-C956-83F7-4E63-19344168501D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F65A50B9-C956-83F7-4E63-19344168501D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F65A50B9-C956-83F7-4E63-19344168501D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A58B9508-148A-7F42-1CDD-DBD9509343CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A58B9508-148A-7F42-1CDD-DBD9509343CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A58B9508-148A-7F42-1CDD-DBD9509343CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A58B9508-148A-7F42-1CDD-DBD9509343CA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{446A17F2-5F60-4122-88E6-D1786717885D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{EAA7F2D4-6B55-852B-174C-0814BEF265ED} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{C8D33BF3-F22E-395B-C6D7-C83544B95108} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F65A50B9-C956-83F7-4E63-19344168501D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A58B9508-148A-7F42-1CDD-DBD9509343CA} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {649B2EF0-52DC-4556-A0A1-66415B9ACA90}
+	EndGlobalSection
+EndGlobal
