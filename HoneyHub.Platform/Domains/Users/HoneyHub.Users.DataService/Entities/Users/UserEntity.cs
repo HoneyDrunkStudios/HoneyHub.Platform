@@ -28,12 +28,12 @@ public class UserEntity : BaseEntity
     public string? RefreshTokenHash { get; set; }
 
     // Account Status Fields
-    public required bool EmailVerified { get; set; } = false;
-    public required bool IsActive { get; set; } = true;
-    public required bool IsDeleted { get; set; } = false;
+    public bool EmailVerified { get; set; } = false;
+    public bool IsActive { get; set; } = true;
+    public bool IsDeleted { get; set; } = false;
 
     // Subscription Management
-    public required int SubscriptionPlanId { get; set; } = 1;
+    public int SubscriptionPlanId { get; set; } = 1;
 
     // Audit Fields (additional to BaseEntity)
     public DateTime? LastLoginAt { get; set; }
