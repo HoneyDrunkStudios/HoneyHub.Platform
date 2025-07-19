@@ -23,13 +23,11 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 	public async Task Insert(T entity)
 	{
 		await _context.Set<T>().AddAsync(entity);
-		await _context.SaveChangesAsync();
 	}
 
 	public async Task Insert(List<T> entities)
 	{
 		await _context.Set<T>().AddRangeAsync(entities);
-		await _context.SaveChangesAsync();
 	}
 
 	#endregion
