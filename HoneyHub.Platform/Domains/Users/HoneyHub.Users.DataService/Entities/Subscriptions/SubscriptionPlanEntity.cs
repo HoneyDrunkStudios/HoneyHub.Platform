@@ -18,10 +18,10 @@ public class SubscriptionPlanEntity : BaseEntity
     public required int BillingIntervalMonths { get; set; } = 1;
 
     // Plan Status and Availability
-    public required bool IsActive { get; set; } = true;
-    public required bool IsPublic { get; set; } = true;
-    public required bool IsDefault { get; set; } = false;
-    public required int SortOrder { get; set; } = 100;
+    public required bool IsActive { get; set; }
+    public required bool IsPublic { get; set; }
+    public required bool IsDefault { get; set; }
+    public required int SortOrder { get; set; }
 
     // Feature Limits
     public int? MaxProjects { get; set; }
