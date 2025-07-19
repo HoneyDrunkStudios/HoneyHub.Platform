@@ -34,14 +34,19 @@ public class BaseContext : DbContext
 		}
 	}
 
+	private static readonly Lazy<HashSet<Type>> CachedEntities = new Lazy<HashSet<Type>>(() =>
+	{
+		return Assembly.GetExecutingAssembly()
+			.GetTypes()
+			.Where(x => x.BaseType != null && x.BaseType.Equals(typeof(BaseEntity)))
+			.ToHashSet();
+	});
+
 	private void ConfigureDbSets(ModelBuilder modelBuilder)
 	{
-		var entities = Assembly.GetExecutingAssembly()
-			.GetTypes()
-			.Where(x => x.BaseType != null && x.BaseType
-			.Equals(typeof(BaseEntity)));
-
-		foreach (var entity in entities)
+		foreach (var entity in CachedEntities.Value)
+		{
 			modelBuilder.Entity(entity);
+		}
 	}
 }
