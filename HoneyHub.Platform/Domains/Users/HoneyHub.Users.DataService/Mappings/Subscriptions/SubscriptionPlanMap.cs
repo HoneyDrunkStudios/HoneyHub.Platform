@@ -1,9 +1,10 @@
-﻿using HoneyHub.Users.DataService.Entities.Subscriptions;
+﻿using HoneyHub.Core.DataService.Mappings;
+using HoneyHub.Users.DataService.Entities.Subscriptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace HoneyHub.Users.DataService.Mappings.Subscriptions;
 
-public class SubscriptionPlanMap
+public class SubscriptionPlanMap : IEntityMap
 {
 	public void Configure(ModelBuilder modelBuilder)
 	{
