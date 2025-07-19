@@ -10,7 +10,7 @@ public class UserEntity : BaseEntity
 
     // Core Identity Fields
     public required string Username { get; set; }
-    public required string Email { get; set; }
+	public required string Email { get; set; }
 
     // Authentication Fields
     public string? PasswordHash { get; set; }
@@ -32,11 +32,8 @@ public class UserEntity : BaseEntity
     public bool IsActive { get; set; } = true;
     public bool IsDeleted { get; set; } = false;
 
-	// Default subscription plan ID
-	private const int DefaultSubscriptionPlanId = 1;
-
 	// Subscription Management
-	public int SubscriptionPlanId { get; set; } = DefaultSubscriptionPlanId;
+	public int SubscriptionPlanId { get; set; }
 
 	// Audit Fields (additional to BaseEntity)
 	public DateTime? LastLoginAt { get; set; }
