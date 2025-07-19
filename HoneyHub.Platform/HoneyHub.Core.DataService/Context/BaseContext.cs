@@ -7,7 +7,7 @@ namespace HoneyHub.Core.DataService.Context;
 
 public class BaseContext : DbContext
 {
-	public BaseContext(DbContextOptions<BaseContext> dbContextOptions) : base(dbContextOptions)
+	public BaseContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
 	{
 		ChangeTracker.LazyLoadingEnabled = false;
 	}
