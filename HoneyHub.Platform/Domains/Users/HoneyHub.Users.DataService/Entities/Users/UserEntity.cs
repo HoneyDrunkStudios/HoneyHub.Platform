@@ -14,7 +14,16 @@ public class UserEntity : BaseEntity
 
     // Authentication Fields
     public string? PasswordHash { get; set; }
+    /// <summary>
+    /// The name of the external authentication provider (e.g., Google, Facebook, etc.).
+    /// Used to identify the source of the user's authentication.
+    /// </summary>
     public string? Provider { get; set; }
+
+    /// <summary>
+    /// The unique identifier assigned to the user by the external authentication provider.
+    /// This is typically used to link the user account with the provider's system.
+    /// </summary>
     public string? ProviderId { get; set; }
     public string? RefreshTokenHash { get; set; }
 
