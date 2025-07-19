@@ -23,6 +23,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Users", "Users", "{2D476B9C
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "HoneyHub.Users.Database", "Domains\Users\HoneyHub.Users.Database\HoneyHub.Users.Database.sqlproj", "{C839D6ED-1875-4812-A896-B358F79978BB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Core.DataService", "HoneyHub.Core.DataService\HoneyHub.Core.DataService.csproj", "{331E7FF9-5AD3-4EB0-A92A-60D666CC5395}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Users.DataService", "Domains\Users\HoneyHub.Users.DataService\HoneyHub.Users.DataService.csproj", "{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +59,14 @@ Global
 		{C839D6ED-1875-4812-A896-B358F79978BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C839D6ED-1875-4812-A896-B358F79978BB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C839D6ED-1875-4812-A896-B358F79978BB}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{331E7FF9-5AD3-4EB0-A92A-60D666CC5395}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{331E7FF9-5AD3-4EB0-A92A-60D666CC5395}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{331E7FF9-5AD3-4EB0-A92A-60D666CC5395}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{331E7FF9-5AD3-4EB0-A92A-60D666CC5395}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +79,8 @@ Global
 		{A58B9508-148A-7F42-1CDD-DBD9509343CA} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{2D476B9C-9303-48E8-8792-4D38279DBAAE} = {017E1391-477D-4AC4-AA46-6DF558D6295D}
 		{C839D6ED-1875-4812-A896-B358F79978BB} = {2D476B9C-9303-48E8-8792-4D38279DBAAE}
+		{331E7FF9-5AD3-4EB0-A92A-60D666CC5395} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1} = {2D476B9C-9303-48E8-8792-4D38279DBAAE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {649B2EF0-52DC-4556-A0A1-66415B9ACA90}
