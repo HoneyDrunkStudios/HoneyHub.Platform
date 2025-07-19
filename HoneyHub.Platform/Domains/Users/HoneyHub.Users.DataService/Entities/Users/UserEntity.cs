@@ -32,11 +32,14 @@ public class UserEntity : BaseEntity
     public bool IsActive { get; set; } = true;
     public bool IsDeleted { get; set; } = false;
 
-    // Subscription Management
-    public int SubscriptionPlanId { get; set; } = 1;
+	// Default subscription plan ID
+	private const int DefaultSubscriptionPlanId = 1;
 
-    // Audit Fields (additional to BaseEntity)
-    public DateTime? LastLoginAt { get; set; }
+	// Subscription Management
+	public required int SubscriptionPlanId { get; set; } = DefaultSubscriptionPlanId;
+
+	// Audit Fields (additional to BaseEntity)
+	public DateTime? LastLoginAt { get; set; }
 
     // Navigation Properties
     public SubscriptionPlanEntity? SubscriptionPlan { get; set; }

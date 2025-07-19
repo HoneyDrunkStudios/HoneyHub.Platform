@@ -1,9 +1,8 @@
 ﻿using HoneyHub.Core.DataService.Context;
 using HoneyHub.Core.DataService.Entities;
-using HoneyHub.Core.DataServices.DataServices;
 using Microsoft.EntityFrameworkCore;
 
-namespace HoneyHub.DataServices.DataServices;
+namespace HoneyHub.Core.DataServices.DataServices;
 
 public class Repository<T> : IRepository<T> where T : BaseEntity
 {
@@ -34,32 +33,48 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
 	#region Update
 
-	public async Task Update(T entity)
+	public Task Update(T entity)
 	{
 		_context.Set<T>().Update(entity);
-		await _context.SaveChangesAsync();
+		return Task.CompletedTask;
 	}
 
-	public async Task Update(List<T> entities)
+	public Task Update(List<T> entities)
 	{
 		_context.Set<T>().UpdateRange(entities);
-		await _context.SaveChangesAsync();
+		return Task.CompletedTask;
 	}
 
 	#endregion
 
 	#region Delete
 
-	public async Task Delete(T entity)
+	public Task Delete(T entity)
 	{
 		_context.Set<T>().Remove(entity);
-		await _context.SaveChangesAsync();
+		return Task.CompletedTask;
 	}
 
-	public async Task Delete(List<T> entities)
+	public Task Delete(List<T> entities)
 	{
 		_context.Set<T>().RemoveRange(entities);
-		await _context.SaveChangesAsync();
+		return Task.CompletedTask;
+	}
+
+	#endregion
+
+	#region Unit of Work
+
+	/// <summary>
+	/// Persists all pending changes to the database within a single transaction.
+	/// This method provides explicit control over transaction boundaries, allowing
+	/// multiple operations to be batched together for atomic persistence.
+	/// </summary>
+	/// <param name="cancellationToken">Cancellation token for the async operation</param>
+	/// <returns>The number of state entries written to the database</returns>
+	public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+	{
+		return await _context.SaveChangesAsync(cancellationToken);
 	}
 
 	#endregion
