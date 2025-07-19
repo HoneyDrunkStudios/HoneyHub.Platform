@@ -36,9 +36,9 @@ public class BaseContext : DbContext
 
 	private static readonly Lazy<HashSet<Type>> CachedEntities = new Lazy<HashSet<Type>>(() =>
 	{
-		return System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Assembly
-			.GetTypes()
-			.Where(x => x.BaseType != null && x.BaseType.Equals(typeof(BaseEntity)))
+		return AppDomain.CurrentDomain.GetAssemblies()
+			.SelectMany(assembly => assembly.GetTypes())
+			.Where(type => type.BaseType != null && type.BaseType == typeof(BaseEntity))
 			.ToHashSet();
 	});
 
