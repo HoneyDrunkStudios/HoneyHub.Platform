@@ -16,20 +16,6 @@ BEGIN
     PRINT 'Index IX_SubscriptionPlan_Active_Public already exists.';
 END
 
--- Index for Stripe integration
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_SubscriptionPlan_StripeProductId' AND object_id = OBJECT_ID('[dbo].[SubscriptionPlan]'))
-BEGIN
-    CREATE NONCLUSTERED INDEX IX_SubscriptionPlan_StripeProductId
-    ON [dbo].[SubscriptionPlan] ([StripeProductId])
-    WHERE [StripeProductId] IS NOT NULL;
-    
-    PRINT 'Index IX_SubscriptionPlan_StripeProductId created successfully.';
-END
-ELSE
-BEGIN
-    PRINT 'Index IX_SubscriptionPlan_StripeProductId already exists.';
-END
-
 -- Index for default plan lookup
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_SubscriptionPlan_Default' AND object_id = OBJECT_ID('[dbo].[SubscriptionPlan]'))
 BEGIN

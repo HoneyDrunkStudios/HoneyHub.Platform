@@ -20,7 +20,7 @@
     [PasswordHash]          NVARCHAR(512) NULL,        -- NULL for OAuth-only accounts
     [Provider]              NVARCHAR(50) NULL,         -- OAuth provider (Google, Microsoft, etc.)
     [ProviderId]            NVARCHAR(256) NULL,        -- External provider user ID
-    [RefreshToken]          NVARCHAR(MAX) NULL,        -- JWT refresh token storage
+    [RefreshTokenHash]      NVARCHAR(MAX) NULL,        -- Hashed JWT refresh token storage
     
     -- Account Status Fields
     [EmailVerified]         BIT NOT NULL

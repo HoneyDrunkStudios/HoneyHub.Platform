@@ -44,13 +44,10 @@ CREATE TABLE [dbo].[SubscriptionPlan] (
     
     [SortOrder]             INT NOT NULL                    -- Display order in UI
         CONSTRAINT DF_SubscriptionPlan_SortOrder DEFAULT 100,
-    
-    -- Feature Configuration (JSON)
-    [Features]              NVARCHAR(MAX) NULL,             -- JSON feature configuration
-    [Limitations]           NVARCHAR(MAX) NULL,             -- JSON usage limitations
-    
-    -- Marketing and Display
-    [HighlightFeatures]     NVARCHAR(MAX) NULL,             -- JSON key selling points
+    [MaxProjects]           INT NULL 					 -- Maximum number of projects allowed (NULL = unlimited)
+        CONSTRAINT CK_SubscriptionPlan_MaxProjects_NonNegative CHECK ([MaxProjects] IS NULL OR [MaxProjects] >= 0),
+    [MaxActiveWorkItemsPerProject] INT NULL 		   -- Maximum active work items per project (NULL = unlimited)
+        CONSTRAINT CK_SubscriptionPlan_MaxActiveWorkItemsPerProject_NonNegative CHECK ([MaxActiveWorkItemsPerProject] IS NULL OR [MaxActiveWorkItemsPerProject] >= 0),
     [CallToAction]          NVARCHAR(50) NULL,              -- Button text (e.g., "Get Started", "Contact Sales")
     [PopularBadge]          BIT NOT NULL                    -- Show "Most Popular" badge
         CONSTRAINT DF_SubscriptionPlan_PopularBadge DEFAULT 0,
