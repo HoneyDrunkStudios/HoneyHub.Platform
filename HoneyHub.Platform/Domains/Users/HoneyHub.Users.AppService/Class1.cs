@@ -1,7 +1,1 @@
-﻿namespace HoneyHub.Users.AppService
-{
-	public class Class1
-	{
-
-	}
-}
+// File removed as it contained no useful code.
