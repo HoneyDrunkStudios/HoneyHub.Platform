@@ -61,4 +61,42 @@ public class PasswordService : IPasswordService
 
         return Convert.ToBase64String(argon2.GetBytes(_options.HashLength));
     }
+
+    /// <summary>
+    /// Verifies a password against its stored hash using Argon2id algorithm.
+    /// Uses constant-time comparison to prevent timing attacks.
+    /// </summary>
+    /// <param name="password">Plain text password to verify</param>
+    /// <param name="hash">Base64-encoded stored password hash</param>
+    /// <param name="salt">Base64-encoded salt used for the original hash</param>
+    /// <returns>True if password matches the hash, false otherwise</returns>
+    /// <exception cref="ArgumentException">Thrown when password, hash, or salt is null or whitespace</exception>
+    public bool VerifyPassword(string password, string hash, string salt)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+        ArgumentException.ThrowIfNullOrWhiteSpace(hash);
+        ArgumentException.ThrowIfNullOrWhiteSpace(salt);
+
+        try
+        {
+            // Generate hash for the provided password using the same parameters
+            var computedHash = HashPassword(password, salt);
+
+            // Use constant-time comparison to prevent timing attacks
+            return CryptographicOperations.FixedTimeEquals(
+                Convert.FromBase64String(hash),
+                Convert.FromBase64String(computedHash)
+            );
+        }
+        catch (FormatException)
+        {
+            // Invalid base64 format in hash or salt
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            // Invalid arguments passed to HashPassword
+            return false;
+        }
+    }
 }
