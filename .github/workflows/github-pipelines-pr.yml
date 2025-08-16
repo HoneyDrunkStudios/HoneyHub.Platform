@@ -25,6 +25,9 @@ jobs:
   build_test:
     name: Build & Test
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - uses: actions/checkout@v4
@@ -148,6 +151,9 @@ jobs:
     name: Code Quality Checks
     runs-on: windows-latest
     needs: build_test
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - uses: actions/checkout@v4
