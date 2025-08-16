@@ -1,0 +1,191 @@
+name: Platform — PR
+
+on:
+  pull_request:
+    branches: [ main ]   # run on any change to PRs targeting main
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  CONFIGURATION: Release
+  # Prefer this solution name if it exists in the repo
+  SOLUTION_HINT: HoneyHub.Platform.sln
+  # Your Azure Artifacts v3 feed URL
+  AZURE_ARTIFACTS_FEED_URL: https://pkgs.dev.azure.com/honeydrunk-studios/_packaging/9e669848-5c39-43b5-a8ae-523ffd21529f/nuget/v3/index.json
+
+jobs:
+  build_test:
+    name: Build & Test
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+          cache: true
+          cache-dependency-path: |
+            **/Directory.Packages.props
+            **/packages.lock.json
+            **/*.csproj
+            **/*.sln
+            global.json
+            nuget.config
+
+      # ✅ Private Azure Artifacts feed auth
+      - name: NuGet auth (Azure Artifacts)
+        run: |
+          dotnet nuget remove source azure-artifacts || true
+          dotnet nuget add source "$AZURE_ARTIFACTS_FEED_URL" \
+            --name azure-artifacts \
+            --username azdo \
+            --password "${{ secrets.AZURE_ARTIFACTS_PAT }}" \
+            --store-password-in-clear-text
+
+      # 🔎 Locate the solution (prefers SOLUTION_HINT)
+      - name: Locate solution or project
+        id: locate
+        shell: bash
+        run: |
+          set -euo pipefail
+          # If a hint is set and exists, use it
+          if [[ -n "${SOLUTION_HINT:-}" ]] && [[ -f "$SOLUTION_HINT" || -f "**/$SOLUTION_HINT" ]]; then
+            match=$(git ls-files "**/$SOLUTION_HINT" | head -n1 || true)
+            if [[ -n "$match" ]]; then
+              echo "Using hinted solution: $match"
+              echo "target=$match" >> "$GITHUB_OUTPUT"
+              echo "kind=sln" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          # Otherwise search for any .sln
+          sln=$(git ls-files '**/*.sln' '*.sln' | head -n1 || true)
+          if [[ -n "$sln" ]]; then
+            echo "Found solution: $sln"
+            echo "target=$sln" >> "$GITHUB_OUTPUT"
+            echo "kind=sln" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Fallback to first .csproj
+          proj=$(git ls-files '**/*.csproj' '*.csproj' | head -n1 || true)
+          if [[ -n "$proj" ]]; then
+            echo "Found project: $proj"
+            echo "target=$proj" >> "$GITHUB_OUTPUT"
+            echo "kind=csproj" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "No .sln or .csproj found in the repository." >&2
+          exit 1
+
+      - name: Restore
+        run: dotnet restore "${{ steps.locate.outputs.target }}" --verbosity minimal
+
+      - name: Verify formatting
+        run: dotnet format "${{ steps.locate.outputs.target }}" --verify-no-changes --verbosity minimal
+
+      # 🔧 Build all .csproj (skip the SQL database project that needs SSDT)
+      - name: Build .NET projects (warnings as errors)
+        run: |
+          set -euo pipefail
+          mapfile -t projects < <(git ls-files '**/*.csproj' '*.csproj' | sort)
+          if [[ ${#projects[@]} -eq 0 ]]; then
+            echo "No .csproj files found" >&2
+            exit 1
+          fi
+          for p in "${projects[@]}"; do
+            echo "→ Building $p"
+            dotnet build "$p" --configuration "$CONFIGURATION" --no-restore -warnaserror
+          done
+
+      # ✅ Run tests by test project so we don't have to build the .sln (and avoid sqlproj)
+      - name: Test projects
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          found=0
+          for t in $(git ls-files '**/*[Tt]ests.csproj' '*.Tests.csproj' | sort); do
+            found=1
+            echo "→ Testing $t"
+            dotnet test "$t" \
+              --configuration "$CONFIGURATION" \
+              --no-build \
+              --logger "trx;LogFileName=$(basename "$t").trx" \
+              --results-directory ./TestResults \
+              --collect "XPlat Code Coverage"
+          done
+          if [[ $found -eq 0 ]]; then
+            echo "No test projects found (skipping)."
+          fi
+
+      - name: Publish test results to PR
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        with:
+          files: "TestResults/**/*.trx"
+          check_name: "Unit Tests"
+
+      - name: Upload coverage (Cobertura)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-cobertura
+          path: TestResults/**/coverage.cobertura.xml
+
+  code_quality:
+    name: Code Quality Checks
+    runs-on: windows-latest
+    needs: build_test
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enforce test naming pattern (Method_Condition_Expected)
+        shell: bash
+        run: |
+          set -euo pipefail
+          has_error=0
+          while IFS= read -r file; do
+            while IFS= read -r line; do
+              name=$(echo "$line" | sed -n 's/.*public void \([^(]*\).*/\1/p')
+              if [[ -n "$name" && ! "$name" =~ ^[A-Za-z][A-Za-z0-9]*(_[A-Za-z][A-Za-z0-9]*){2,}$ ]]; then
+                echo "::error file=$file::Test '$name' violates Method_Condition_Expected"
+                has_error=1
+              fi
+            done < <(grep -n "public void.*(" "$file" || true)
+          done < <(find . -name "*.cs" -path "*/Tests/*" -print0 | xargs -0 -r grep -l "\[Fact" || true)
+          exit $has_error
+
+      - name: Enforce DisplayName on [Fact]/[Theory]
+        shell: bash
+        run: |
+          set -euo pipefail
+          has_error=0
+          while IFS= read -r file; do
+            fact=$(grep -cE "\[Fact|\[Theory" "$file" || echo 0)
+            display=$(grep -c "DisplayName\\s*=" "$file" || echo 0)
+            if [ "$fact" -ne "$display" ]; then
+              echo "::error file=$file::$fact test(s) but $display DisplayName attribute(s)"
+              has_error=1
+            fi
+          done < <(find . -name "*.cs" -path "*/Tests/*" -print0 | xargs -0 -r grep -lE "\[Fact|\[Theory" || true)
+          exit $has_error

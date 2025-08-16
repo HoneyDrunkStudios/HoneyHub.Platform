@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace HoneyHub.Core.DataService.Mappings;
 
 public interface IEntityMap
 {
-	void Configure(ModelBuilder modelBuilder);
+    void Configure(ModelBuilder modelBuilder);
 }

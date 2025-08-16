@@ -1,4 +1,4 @@
-﻿using HoneyHub.Core.DataService.Entities;
+using HoneyHub.Core.DataService.Entities;
 using HoneyHub.Users.DataService.Entities.Users;
 
 namespace HoneyHub.Users.DataService.Entities.Subscriptions;
@@ -39,6 +39,6 @@ public class SubscriptionPlanEntity : BaseEntity
     public required DateTime EffectiveFrom { get; set; }
     public DateTime? EffectiveTo { get; set; }
 
-	// Navigation Properties
-	public List<UserEntity> Users { get; set; } = new();
+    // Navigation Properties
+    public List<UserEntity> Users { get; set; } = new();
 }
