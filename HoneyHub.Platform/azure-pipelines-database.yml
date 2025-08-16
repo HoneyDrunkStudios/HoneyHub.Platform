@@ -1,15 +1,21 @@
 # azure-pipelines-database.yml
 trigger:
   branches: { include: [ main ] }
-  paths: { include: [ 'HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/**', '**/*.sqlproj' ] }
+  paths:    { include: [ 'HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/**', '**/*.sqlproj' ] }
 pr: none
 
 pool: { vmImage: windows-latest }
 
 variables:
-  buildConfiguration: Release
-  sqlprojPath: HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/HoneyHub.Users.Database.sqlproj
-  dacpacOutDir: $(Build.ArtifactStagingDirectory)\dacpac\
+- group: HoneyHub-Dev
+- name: buildConfiguration
+  value: Release
+- name: sqlprojPath
+  value: HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/HoneyHub.Users.Database.sqlproj
+- name: dacpacOutDir
+  value: '$(Build.ArtifactStagingDirectory)\dacpac\'
+- name: DEV_SQL_CONNECTION_STRING
+  value: ${{ variables['db-admin-user-connstring'] }}
 
 stages:
 - stage: Build_DACPAC
@@ -27,6 +33,7 @@ stages:
         platform: 'Any CPU'
         configuration: '$(buildConfiguration)'
         clean: true
+
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: '$(dacpacOutDir)'
@@ -36,20 +43,30 @@ stages:
   dependsOn: Build_DACPAC
   jobs:
   - deployment: DbDeployDEV
-    environment: DEV   # add approvers if you want
+    environment: DEV
     strategy:
       runOnce:
         deploy:
           steps:
           - download: current
             artifact: DatabaseDacpac
-          # Use SqlPackage against the downloaded DACPAC (build-once) — or swap for MSBuild /t:Publish if you prefer
-          - powershell: |
-              $dacpac = Get-ChildItem "$(Pipeline.Workspace)\DatabaseDacpac" -Recurse -Filter *.dacpac | Select -First 1
-              $sqlpkg = 'C:\Program Files\Microsoft SQL Server\160\DAC\bin\SqlPackage.exe'
-              if (-not (Test-Path $sqlpkg)) { $sqlpkg = 'C:\Program Files\Microsoft SQL Server\150\DAC\bin\SqlPackage.exe' }
+
+          - pwsh: |
+              $dacpac = Get-ChildItem "$(Pipeline.Workspace)\DatabaseDacpac" -Recurse -Filter *.dacpac | Select-Object -First 1
+              if (-not $dacpac) { throw "DACPAC not found." }
+
+              $sqlpkg = "${env:ProgramFiles}\Microsoft SQL Server\160\DAC\bin\SqlPackage.exe"
+              if (-not (Test-Path $sqlpkg)) { $sqlpkg = "${env:ProgramFiles}\Microsoft SQL Server\150\DAC\bin\SqlPackage.exe" }
+
+              $conn = $env:DEV_SQL_CONNECTION_STRING
+              if (-not $conn) { throw "DEV_SQL_CONNECTION_STRING is empty. Check var group linkage & secret name." }
+
               & $sqlpkg /Action:Publish `
                 /SourceFile:$($dacpac.FullName) `
-                /TargetConnectionString:"$(db-admin-user-connstring)" `
+                /TargetConnectionString:"$conn" `
                 /p:BlockOnPossibleDataLoss=true `
-                /p:DropObjectsNotInSource=false
+                /p:DropObjectsNotInSource=false `
+                /p:AllowIncompatiblePlatform=false
+            displayName: 'SqlPackage Publish (DEV)'
+            env:
+              DEV_SQL_CONNECTION_STRING: $(DEV_SQL_CONNECTION_STRING)
