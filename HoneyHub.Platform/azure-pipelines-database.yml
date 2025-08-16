@@ -1,0 +1,55 @@
+# azure-pipelines-database.yml
+trigger:
+  branches: { include: [ main ] }
+  paths: { include: [ 'HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/**', '**/*.sqlproj' ] }
+pr: none
+
+pool: { vmImage: windows-latest }
+
+variables:
+  buildConfiguration: Release
+  sqlprojPath: HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/HoneyHub.Users.Database.sqlproj
+  dacpacOutDir: $(Build.ArtifactStagingDirectory)\dacpac\
+
+stages:
+- stage: Build_DACPAC
+  jobs:
+  - job: Build
+    steps:
+    - task: VSBuild@1
+      inputs:
+        solution: '$(sqlprojPath)'
+        msbuildArgs: >
+          /t:Build
+          /p:Configuration=$(buildConfiguration)
+          /p:Platform="Any CPU"
+          /p:OutDir=$(dacpacOutDir)
+        platform: 'Any CPU'
+        configuration: '$(buildConfiguration)'
+        clean: true
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(dacpacOutDir)'
+        artifact: 'DatabaseDacpac'
+
+- stage: Deploy_DEV
+  dependsOn: Build_DACPAC
+  jobs:
+  - deployment: DbDeployDEV
+    environment: DEV   # add approvers if you want
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: DatabaseDacpac
+          # Use SqlPackage against the downloaded DACPAC (build-once) — or swap for MSBuild /t:Publish if you prefer
+          - powershell: |
+              $dacpac = Get-ChildItem "$(Pipeline.Workspace)\DatabaseDacpac" -Recurse -Filter *.dacpac | Select -First 1
+              $sqlpkg = 'C:\Program Files\Microsoft SQL Server\160\DAC\bin\SqlPackage.exe'
+              if (-not (Test-Path $sqlpkg)) { $sqlpkg = 'C:\Program Files\Microsoft SQL Server\150\DAC\bin\SqlPackage.exe' }
+              & $sqlpkg /Action:Publish `
+                /SourceFile:$($dacpac.FullName) `
+                /TargetConnectionString:"$(DEV_SQL_CONNECTION_STRING)" `
+                /p:BlockOnPossibleDataLoss=true `
+                /p:DropObjectsNotInSource=false
