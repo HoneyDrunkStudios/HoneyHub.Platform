@@ -1,9 +1,9 @@
-﻿using HoneyHub.Core.DataService.Context;
+using HoneyHub.Core.DataService.Context;
 using Microsoft.EntityFrameworkCore;
 
 namespace HoneyHub.Users.DataService.Context;
 
 public class UsersContext : BaseContext
 {
-	public UsersContext(DbContextOptions<UsersContext> dbContextOptions) : base(dbContextOptions) {	}
+    public UsersContext(DbContextOptions<UsersContext> dbContextOptions) : base(dbContextOptions) { }
 }
