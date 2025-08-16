@@ -50,6 +50,6 @@ stages:
               if (-not (Test-Path $sqlpkg)) { $sqlpkg = 'C:\Program Files\Microsoft SQL Server\150\DAC\bin\SqlPackage.exe' }
               & $sqlpkg /Action:Publish `
                 /SourceFile:$($dacpac.FullName) `
-                /TargetConnectionString:"$(DEV_SQL_CONNECTION_STRING)" `
+                /TargetConnectionString:"$(db-admin-user-connstring)" `
                 /p:BlockOnPossibleDataLoss=true `
                 /p:DropObjectsNotInSource=false
