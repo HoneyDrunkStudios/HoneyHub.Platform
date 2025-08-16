@@ -4,7 +4,8 @@ trigger:
   paths:    { include: [ 'HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/**', '**/*.sqlproj' ] }
 pr: none
 
-pool: { vmImage: windows-latest }
+pool:
+  vmImage: windows-latest
 
 variables:
 - group: HoneyHub-Dev
@@ -16,11 +17,15 @@ variables:
   value: '$(Build.ArtifactStagingDirectory)\dacpac\'
 
 stages:
+# ────────────────────────────────────────────────────────────────────────────────
 - stage: Build_DACPAC
+  displayName: Build DACPAC
   jobs:
   - job: Build
+    displayName: Build .sqlproj
     steps:
     - task: VSBuild@1
+      displayName: 'Build $(sqlprojPath)'
       inputs:
         solution: '$(sqlprojPath)'
         msbuildArgs: >
@@ -33,14 +38,18 @@ stages:
         clean: true
 
     - task: PublishPipelineArtifact@1
+      displayName: 'Publish DACPAC artifact'
       inputs:
         targetPath: '$(dacpacOutDir)'
         artifact: 'DatabaseDacpac'
 
+# ────────────────────────────────────────────────────────────────────────────────
 - stage: Deploy_DEV
+  displayName: Deploy to DEV
   dependsOn: Build_DACPAC
   jobs:
   - deployment: DbDeployDEV
+    displayName: 'Azure SQL deploy (DEV)'
     environment: DEV
     strategy:
       runOnce:
@@ -49,29 +58,16 @@ stages:
           - download: current
             artifact: DatabaseDacpac
 
-          - pwsh: |
-              Write-Host "ConnStr present? " + (-not [string]::IsNullOrEmpty($env:DEV_SQL_CONNECTION_STRING))
-              Write-Host "ConnStr length: " + ($env:DEV_SQL_CONNECTION_STRING).Length
-            displayName: "Check mapped conn string"
-            env:
-              DEV_SQL_CONNECTION_STRING: $[ variables['db-admin-user-connstring'] ]
-
-          - pwsh: |
-              $dacpac = Get-ChildItem "$(Pipeline.Workspace)\DatabaseDacpac" -Recurse -Filter *.dacpac | Select-Object -First 1
-              if (-not $dacpac) { throw "DACPAC not found." }
-
-              $sqlpkg = "${env:ProgramFiles}\Microsoft SQL Server\160\DAC\bin\SqlPackage.exe"
-              if (-not (Test-Path $sqlpkg)) { $sqlpkg = "${env:ProgramFiles}\Microsoft SQL Server\150\DAC\bin\SqlPackage.exe" }
-
-              $conn = $env:DEV_SQL_CONNECTION_STRING
-              if (-not $conn) { throw "DEV_SQL_CONNECTION_STRING is empty. Check var group linkage & secret name." }
-
-              & $sqlpkg /Action:Publish `
-                /SourceFile:$($dacpac.FullName) `
-                /TargetConnectionString:"$conn" `
-                /p:BlockOnPossibleDataLoss=true `
-                /p:DropObjectsNotInSource=false `
+          # Built-in DACPAC deploy task (no hardcoded SqlPackage path needed)
+          - task: SqlAzureDacpacDeployment@1
+            displayName: 'Deploy DACPAC to DEV'
+            inputs:
+              AuthenticationType: 'connectionString'
+              ConnectionString: '$(db-admin-user-connstring)'
+              deployType: 'DacpacTask'
+              DeploymentAction: 'Publish'
+              DacpacFile: '$(Pipeline.Workspace)\DatabaseDacpac\**\*.dacpac'
+              AdditionalArguments: >
+                /p:BlockOnPossibleDataLoss=true
+                /p:DropObjectsNotInSource=false
                 /p:AllowIncompatiblePlatform=false
-            displayName: 'SqlPackage Publish (DEV)'
-            env:
-              DEV_SQL_CONNECTION_STRING: $[ variables['db-admin-user-connstring'] ]
