@@ -14,8 +14,6 @@ variables:
   value: HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/HoneyHub.Users.Database.sqlproj
 - name: dacpacOutDir
   value: '$(Build.ArtifactStagingDirectory)\dacpac\'
-- name: DEV_SQL_CONNECTION_STRING
-  value: ${{ variables['db-admin-user-connstring'] }}
 
 stages:
 - stage: Build_DACPAC
@@ -52,6 +50,13 @@ stages:
             artifact: DatabaseDacpac
 
           - pwsh: |
+              Write-Host "ConnStr present? " + (-not [string]::IsNullOrEmpty($env:DEV_SQL_CONNECTION_STRING))
+              Write-Host "ConnStr length: " + ($env:DEV_SQL_CONNECTION_STRING).Length
+            displayName: "Check mapped conn string"
+            env:
+              DEV_SQL_CONNECTION_STRING: $[ variables['db-admin-user-connstring'] ]
+
+          - pwsh: |
               $dacpac = Get-ChildItem "$(Pipeline.Workspace)\DatabaseDacpac" -Recurse -Filter *.dacpac | Select-Object -First 1
               if (-not $dacpac) { throw "DACPAC not found." }
 
@@ -69,4 +74,4 @@ stages:
                 /p:AllowIncompatiblePlatform=false
             displayName: 'SqlPackage Publish (DEV)'
             env:
-              DEV_SQL_CONNECTION_STRING: $(DEV_SQL_CONNECTION_STRING)
+              DEV_SQL_CONNECTION_STRING: $[ variables['db-admin-user-connstring'] ]
