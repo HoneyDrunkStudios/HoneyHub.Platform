@@ -50,7 +50,7 @@ stages:
             artifact: DatabaseDacpac
 
           - pwsh: |
-              Write-Host "ConnStr present? " + [string]::IsNullOrEmpty($env:DEV_SQL_CONNECTION_STRING)
+              Write-Host "ConnStr present? " + (-not [string]::IsNullOrEmpty($env:DEV_SQL_CONNECTION_STRING))
               Write-Host "ConnStr length: " + ($env:DEV_SQL_CONNECTION_STRING).Length
             displayName: "Check mapped conn string"
             env:
