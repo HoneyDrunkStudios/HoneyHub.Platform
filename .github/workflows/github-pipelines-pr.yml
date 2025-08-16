@@ -99,39 +99,38 @@ jobs:
       - name: Verify formatting
         run: dotnet format "${{ steps.locate.outputs.target }}" --verify-no-changes --verbosity minimal
 
-      - name: Build (warnings as errors)
-        run: dotnet build "${{ steps.locate.outputs.target }}" --configuration $CONFIGURATION --no-restore -warnaserror
+      # 🔧 Build all .csproj (skip the SQL database project that needs SSDT)
+      - name: Build .NET projects (warnings as errors)
+        run: |
+          set -euo pipefail
+          mapfile -t projects < <(git ls-files '**/*.csproj' '*.csproj' | sort)
+          if [[ ${#projects[@]} -eq 0 ]]; then
+            echo "No .csproj files found" >&2
+            exit 1
+          fi
+          for p in "${projects[@]}"; do
+            echo "→ Building $p"
+            dotnet build "$p" --configuration "$CONFIGURATION" --no-restore -warnaserror
+          done
 
-      # If a solution was found, test it; else test each *Tests.csproj
-      - name: Test (solution)
-        if: steps.locate.outputs.kind == 'sln'
-        run: >
-          dotnet test "${{ steps.locate.outputs.target }}"
-          --configuration $CONFIGURATION
-          --no-build
-          --logger "trx;LogFileName=test.trx"
-          --results-directory ./TestResults
-          --collect "XPlat Code Coverage"
-
-      - name: Test (by test projects)
-        if: steps.locate.outputs.kind == 'csproj'
-        shell: bash
+      # ✅ Run tests by test project so we don't have to build the .sln (and avoid sqlproj)
+      - name: Test projects
         run: |
           set -euo pipefail
           shopt -s nullglob
           found=0
-          for proj in $(git ls-files '**/*[Tt]ests.csproj' '*.Tests.csproj'); do
+          for t in $(git ls-files '**/*[Tt]ests.csproj' '*.Tests.csproj' | sort); do
             found=1
-            echo "Testing $proj"
-            dotnet test "$proj" \
+            echo "→ Testing $t"
+            dotnet test "$t" \
               --configuration "$CONFIGURATION" \
               --no-build \
-              --logger "trx;LogFileName=$(basename "$proj").trx" \
+              --logger "trx;LogFileName=$(basename "$t").trx" \
               --results-directory ./TestResults \
               --collect "XPlat Code Coverage"
           done
           if [[ $found -eq 0 ]]; then
-            echo "No *Tests.csproj found (skipping test step)."
+            echo "No test projects found (skipping)."
           fi
 
       - name: Publish test results to PR
