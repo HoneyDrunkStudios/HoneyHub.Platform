@@ -1,0 +1,119 @@
+name: Platform — PR
+
+on:
+  pull_request:
+    branches: [ main ]   # 👈 no paths filter = runs on any file change in the PR
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  CONFIGURATION: Release
+  AZURE_ARTIFACTS_FEED_URL: https://pkgs.dev.azure.com/honeydrunk-studios/_packaging/9e669848-5c39-43b5-a8ae-523ffd21529f/nuget/v3/index.json
+
+jobs:
+  build_test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+          cache: true
+          cache-dependency-path: |
+            **/Directory.Packages.props
+            **/packages.lock.json
+            **/*.csproj
+            global.json
+            nuget.config
+
+      # ✅ Private Azure Artifacts feed auth (simple & reliable)
+      - name: NuGet auth (Azure Artifacts)
+        run: |
+          dotnet nuget remove source azure-artifacts || true
+          dotnet nuget add source "$AZURE_ARTIFACTS_FEED_URL" \
+            --name azure-artifacts \
+            --username azdo \
+            --password "${{ secrets.AZURE_ARTIFACTS_PAT }}" \
+            --store-password-in-clear-text
+
+      - name: Restore
+        run: dotnet restore --verbosity minimal
+
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes --verbosity minimal
+
+      - name: Build (warnings as errors)
+        run: dotnet build --configuration $CONFIGURATION --no-restore -warnaserror
+
+      - name: Test
+        run: >
+          dotnet test
+          --configuration $CONFIGURATION
+          --no-build
+          --logger "trx;LogFileName=test.trx"
+          --results-directory ./TestResults
+          --collect "XPlat Code Coverage"
+
+      - name: Publish test results to PR
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: "TestResults/**/*.trx"
+
+      - name: Upload coverage (Cobertura)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-cobertura
+          path: TestResults/**/coverage.cobertura.xml
+
+  code_quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    needs: build_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enforce test naming pattern (Method_Condition_Expected)
+        shell: bash
+        run: |
+          set -euo pipefail
+          has_error=0
+          while IFS= read -r file; do
+            while IFS= read -r line; do
+              name=$(echo "$line" | sed -n 's/.*public void \([^(]*\).*/\1/p')
+              if [[ -n "$name" && ! "$name" =~ ^[A-Za-z]+_[A-Za-z]+_[A-Za-z]+$ ]]; then
+                echo "::error file=$file::Test '$name' violates Method_Condition_Expected"
+                has_error=1
+              fi
+            done < <(grep -n "public void.*(" "$file" || true)
+          done < <(find . -name "*.cs" -path "*/Tests/*" -print0 | xargs -0 -r grep -l "\[Fact" || true)
+          exit $has_error
+
+      - name: Enforce DisplayName on [Fact]/[Theory]
+        shell: bash
+        run: |
+          set -euo pipefail
+          has_error=0
+          while IFS= read -r file; do
+            fact=$(grep -cE "\[Fact|\[Theory" "$file" || echo 0)
+            display=$(grep -c "DisplayName\\s*=" "$file" || echo 0)
+            if [ "$fact" -ne "$display" ]; then
+              echo "::error file=$file::$fact test(s) but $display DisplayName attribute(s)"
+              has_error=1
+            fi
+          done < <(find . -name "*.cs" -path "*/Tests/*" -print0 | xargs -0 -r grep -lE "\[Fact|\[Theory" || true)
+          exit $has_error
