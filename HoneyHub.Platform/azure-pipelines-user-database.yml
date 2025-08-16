@@ -58,7 +58,22 @@ stages:
           - download: current
             artifact: DatabaseDacpac
 
-          # Built-in DACPAC deploy task (no hardcoded SqlPackage path needed)
+          # Find exactly one dacpac; fail if none or multiple.
+          - pwsh: |
+              $root = '$(Pipeline.Workspace)\DatabaseDacpac'
+              $dacpacs = Get-ChildItem -Path $root -Recurse -Filter *.dacpac -File
+              if ($dacpacs.Count -eq 0) {
+                throw "No .dacpac found under $root."
+              }
+              if ($dacpacs.Count -gt 1) {
+                $list = ($dacpacs | ForEach-Object { $_.FullName }) -join "`n"
+                throw "Expected exactly 1 .dacpac, found $($dacpacs.Count):`n$list"
+              }
+              $chosen = $dacpacs[0].FullName
+              Write-Host "Using DACPAC: $chosen"
+              Write-Host "##vso[task.setvariable variable=FoundDacpacFile]$chosen"
+            displayName: 'Locate single DACPAC'
+
           - task: SqlAzureDacpacDeployment@1
             displayName: 'Deploy DACPAC to DEV'
             inputs:
@@ -66,7 +81,7 @@ stages:
               ConnectionString: '$(db-admin-user-connstring)'
               deployType: 'DacpacTask'
               DeploymentAction: 'Publish'
-              DacpacFile: '$(Pipeline.Workspace)\DatabaseDacpac\**\*.dacpac'
+              DacpacFile: '$(FoundDacpacFile)'
               AdditionalArguments: >
                 /p:BlockOnPossibleDataLoss=true
                 /p:DropObjectsNotInSource=false
