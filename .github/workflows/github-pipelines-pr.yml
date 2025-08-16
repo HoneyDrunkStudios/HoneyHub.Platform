@@ -113,13 +113,6 @@ jobs:
             dotnet build "$p" --configuration "$CONFIGURATION" --no-restore -warnaserror
           done
 
-      - name: Install & trust ASP.NET Core HTTPS dev cert
-        shell: pwsh
-        run: |
-          dotnet dev-certs https --clean --force
-          dotnet dev-certs https --trust
-          dotnet dev-certs https --check
-
       # ✅ Run tests by test project so we don't have to build the .sln (and avoid sqlproj)
       - name: Test projects
         run: |

@@ -7,9 +7,16 @@ public class WebTests
     {
         // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.HoneyHub_Platform_AppHost>();
-        appHost.Services.ConfigureHttpClientDefaults(clientBuilder =>
+        appHost.Services.ConfigureHttpClientDefaults(builder =>
         {
-            clientBuilder.AddStandardResilienceHandler();
+            builder.AddStandardResilienceHandler();
+            builder.ConfigurePrimaryHttpMessageHandler(() =>
+                new HttpClientHandler
+                {
+                    // Only in tests: skip server cert validation
+                    ServerCertificateCustomValidationCallback =
+                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                });
         });
         // To output logs to the xUnit.net ITestOutputHelper, consider adding a package from https://www.nuget.org/packages?q=xunit+logging
 
