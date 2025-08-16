@@ -1,0 +1,81 @@
+# azure-pipelines-database.yml
+# Runs only when DB files change on main; deploys DACPAC to SQL Server
+
+trigger:
+  branches:
+    include: [ main ]
+  paths:
+    include:
+      - 'Domains/Users/HoneyHub.Users.Database/**'
+      - '**/*.sqlproj'
+
+pr: none
+
+pool:
+  vmImage: windows-latest  # VS Build + SqlPackage available
+
+variables:
+  buildConfiguration: 'Release'
+  # adjust if your path differs
+  sqlprojPath: 'Domains/Users/HoneyHub.Users.Database/HoneyHub.Users.Database.sqlproj'
+
+stages:
+# ──────────────────────────────────────────────────────────────────────────────
+- stage: Build_DACPAC
+  displayName: 'Build DACPAC'
+  jobs:
+  - job: Build
+    displayName: 'Build SQL project (.sqlproj)'
+    steps:
+    - task: VSBuild@1
+      displayName: 'VSBuild .sqlproj'
+      inputs:
+        solution: '$(sqlprojPath)'
+        msbuildArgs: '/t:Build /p:Configuration=$(buildConfiguration)'
+        platform: 'Any CPU'
+        configuration: '$(buildConfiguration)'
+        clean: true
+
+    # capture dacpac path for downstream stages
+    - powershell: |
+        $dacpac = Get-ChildItem -Recurse -Filter *.dacpac | Where-Object {
+          $_.FullName -match 'HoneyHub\.Users\.Database'
+        } | Select-Object -First 1
+        if (-not $dacpac) { throw "No .dacpac produced. Check sqlproj path/SSDT." }
+        Write-Host "Found DACPAC: $($dacpac.FullName)"
+        Write-Host "##vso[task.setvariable variable=DacpacPath;isOutput=true]$($dacpac.FullName)"
+      name: out
+      displayName: 'Locate DACPAC'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish DACPAC artifact'
+      inputs:
+        pathToPublish: '$(out.DacpacPath)'
+        artifactName: 'dacpac'
+
+# ───────────────── DEV deploy ────────────────────────────────────────────────
+- stage: Deploy_DEV
+  displayName: 'Deploy to DEV'
+  dependsOn: Build_DACPAC
+  jobs:
+  - deployment: DbDeployDEV
+    environment: 'DEV'  # add approvers in AzDO Environments if desired
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: dacpac
+
+          - powershell: |
+              $dacpac = Get-ChildItem "$(Pipeline.Workspace)/dacpac" -Recurse -Filter *.dacpac | Select-Object -First 1
+              if (-not $dacpac) { throw "DACPAC not found in artifact." }
+              $sqlpkg = 'C:\Program Files\Microsoft SQL Server\160\DAC\bin\SqlPackage.exe'
+              if (-not (Test-Path $sqlpkg)) { $sqlpkg = 'C:\Program Files\Microsoft SQL Server\150\DAC\bin\SqlPackage.exe' }
+              & $sqlpkg /Action:Publish `
+                /SourceFile:$($dacpac.FullName) `
+                /TargetConnectionString:"$(DEV_SQL_CONNECTION_STRING)" `
+                /p:BlockOnPossibleDataLoss=true `
+                /p:AllowIncompatiblePlatform=false `
+                /v:ReleaseVersion=$(Build.BuildNumber)
+            displayName: 'SqlPackage Publish (DEV)'
