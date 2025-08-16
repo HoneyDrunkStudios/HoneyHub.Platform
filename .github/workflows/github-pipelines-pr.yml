@@ -2,7 +2,7 @@ name: Platform — PR
 
 on:
   pull_request:
-    branches: [ main ]   # 👈 no paths filter = runs on any file change in the PR
+    branches: [ main ]   # run on any change to PRs targeting main
 
 permissions:
   contents: read
@@ -16,6 +16,9 @@ env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   CONFIGURATION: Release
+  # Prefer this solution name if it exists in the repo
+  SOLUTION_HINT: HoneyHub.Platform.sln
+  # Your Azure Artifacts v3 feed URL
   AZURE_ARTIFACTS_FEED_URL: https://pkgs.dev.azure.com/honeydrunk-studios/_packaging/9e669848-5c39-43b5-a8ae-523ffd21529f/nuget/v3/index.json
 
 jobs:
@@ -35,10 +38,11 @@ jobs:
             **/Directory.Packages.props
             **/packages.lock.json
             **/*.csproj
+            **/*.sln
             global.json
             nuget.config
 
-      # ✅ Private Azure Artifacts feed auth (simple & reliable)
+      # ✅ Private Azure Artifacts feed auth
       - name: NuGet auth (Azure Artifacts)
         run: |
           dotnet nuget remove source azure-artifacts || true
@@ -48,23 +52,84 @@ jobs:
             --password "${{ secrets.AZURE_ARTIFACTS_PAT }}" \
             --store-password-in-clear-text
 
+      # 🔎 Locate the solution (prefers SOLUTION_HINT)
+      - name: Locate solution or project
+        id: locate
+        shell: bash
+        run: |
+          set -euo pipefail
+          # If a hint is set and exists, use it
+          if [[ -n "${SOLUTION_HINT:-}" ]] && [[ -f "$SOLUTION_HINT" || -f "**/$SOLUTION_HINT" ]]; then
+            match=$(git ls-files "**/$SOLUTION_HINT" | head -n1 || true)
+            if [[ -n "$match" ]]; then
+              echo "Using hinted solution: $match"
+              echo "target=$match" >> "$GITHUB_OUTPUT"
+              echo "kind=sln" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          # Otherwise search for any .sln
+          sln=$(git ls-files '**/*.sln' '*.sln' | head -n1 || true)
+          if [[ -n "$sln" ]]; then
+            echo "Found solution: $sln"
+            echo "target=$sln" >> "$GITHUB_OUTPUT"
+            echo "kind=sln" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Fallback to first .csproj
+          proj=$(git ls-files '**/*.csproj' '*.csproj' | head -n1 || true)
+          if [[ -n "$proj" ]]; then
+            echo "Found project: $proj"
+            echo "target=$proj" >> "$GITHUB_OUTPUT"
+            echo "kind=csproj" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "No .sln or .csproj found in the repository." >&2
+          exit 1
+
       - name: Restore
-        run: dotnet restore --verbosity minimal
+        run: dotnet restore "${{ steps.locate.outputs.target }}" --verbosity minimal
 
       - name: Verify formatting
-        run: dotnet format --verify-no-changes --verbosity minimal
+        run: dotnet format "${{ steps.locate.outputs.target }}" --verify-no-changes --verbosity minimal
 
       - name: Build (warnings as errors)
-        run: dotnet build --configuration $CONFIGURATION --no-restore -warnaserror
+        run: dotnet build "${{ steps.locate.outputs.target }}" --configuration $CONFIGURATION --no-restore -warnaserror
 
-      - name: Test
+      # If a solution was found, test it; else test each *Tests.csproj
+      - name: Test (solution)
+        if: steps.locate.outputs.kind == 'sln'
         run: >
-          dotnet test
+          dotnet test "${{ steps.locate.outputs.target }}"
           --configuration $CONFIGURATION
           --no-build
           --logger "trx;LogFileName=test.trx"
           --results-directory ./TestResults
           --collect "XPlat Code Coverage"
+
+      - name: Test (by test projects)
+        if: steps.locate.outputs.kind == 'csproj'
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          found=0
+          for proj in $(git ls-files '**/*[Tt]ests.csproj' '*.Tests.csproj'); do
+            found=1
+            echo "Testing $proj"
+            dotnet test "$proj" \
+              --configuration "$CONFIGURATION" \
+              --no-build \
+              --logger "trx;LogFileName=$(basename "$proj").trx" \
+              --results-directory ./TestResults \
+              --collect "XPlat Code Coverage"
+          done
+          if [[ $found -eq 0 ]]; then
+            echo "No *Tests.csproj found (skipping test step)."
+          fi
 
       - name: Publish test results to PR
         if: always()
