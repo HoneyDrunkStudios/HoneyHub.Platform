@@ -15,6 +15,8 @@ variables:
   value: HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/HoneyHub.Users.Database.sqlproj
 - name: dacpacOutDir
   value: '$(Build.ArtifactStagingDirectory)\dacpac\'
+- name: azureSubscriptionServiceConnection
+  value: HoneyDrunk-Dev-ARM
 
 stages:
 # ────────────────────────────────────────────────────────────────────────────────
@@ -58,6 +60,16 @@ stages:
           - download: current
             artifact: DatabaseDacpac
 
+          # Preflight: confirm vars present
+          - pwsh: |
+              $sc = '$(azureSubscriptionServiceConnection)'
+              $cs = '$(db-admin-user-connstring)'
+              if ([string]::IsNullOrWhiteSpace($sc)) { throw "azureSubscriptionServiceConnection is empty." }
+              if ([string]::IsNullOrWhiteSpace($cs)) { throw "db-admin-user-connstring is empty." }
+              Write-Host "Service connection: $sc"
+              Write-Host "Conn string length: $($cs.Length)"
+            displayName: 'Preflight variable check'
+
           # Find exactly one dacpac; fail if none or multiple.
           - pwsh: |
               $root = '$(Pipeline.Workspace)\DatabaseDacpac'
@@ -77,11 +89,18 @@ stages:
           - task: SqlAzureDacpacDeployment@1
             displayName: 'Deploy DACPAC to DEV'
             inputs:
+              azureSubscription: '$(azureSubscriptionServiceConnection)'
+              connectedServiceName: '$(azureSubscriptionServiceConnection)'
+
               AuthenticationType: 'connectionString'
               ConnectionString: '$(db-admin-user-connstring)'
+
               deployType: 'DacpacTask'
               DeploymentAction: 'Publish'
               DacpacFile: '$(FoundDacpacFile)'
+              IpDetectionMethod: 'AutoDetect'
+              DeleteFirewallRule: true
+
               AdditionalArguments: >
                 /p:BlockOnPossibleDataLoss=true
                 /p:DropObjectsNotInSource=false
