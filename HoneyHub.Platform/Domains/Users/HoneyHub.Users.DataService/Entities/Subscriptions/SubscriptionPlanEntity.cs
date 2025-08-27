@@ -40,5 +40,5 @@ public class SubscriptionPlanEntity : BaseEntity
     public DateTime? EffectiveTo { get; set; }
 
     // Navigation Properties
-    public List<UserEntity> Users { get; set; } = new();
+    public List<UserEntity> Users { get; set; } = [];
 }

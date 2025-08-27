@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HoneyHub.Users.DataService.Context;
 
-public class UsersContext : BaseContext
+public class UsersContext(DbContextOptions<UsersContext> dbContextOptions) : BaseContext(dbContextOptions)
 {
-    public UsersContext(DbContextOptions<UsersContext> dbContextOptions) : base(dbContextOptions) { }
 }

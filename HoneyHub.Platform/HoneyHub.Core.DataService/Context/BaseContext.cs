@@ -1,16 +1,12 @@
 using HoneyHub.Core.DataService.Entities;
 using HoneyHub.Core.DataService.Mappings;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 
 namespace HoneyHub.Core.DataService.Context;
 
 public class BaseContext : DbContext
 {
-    public BaseContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
-    {
-        ChangeTracker.LazyLoadingEnabled = false;
-    }
+    public BaseContext(DbContextOptions dbContextOptions) : base(dbContextOptions) => ChangeTracker.LazyLoadingEnabled = false;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -18,7 +14,7 @@ public class BaseContext : DbContext
         ConfigureMapping(modelBuilder);
     }
 
-    private void ConfigureMapping(ModelBuilder modelBuilder)
+    private static void ConfigureMapping(ModelBuilder modelBuilder)
     {
         var maps = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(assembly => assembly.GetTypes())
@@ -29,20 +25,18 @@ public class BaseContext : DbContext
         {
             var createdInstance = Activator.CreateInstance(map) as IEntityMap;
 
-            if (createdInstance != null)
-                createdInstance.Configure(modelBuilder);
+            createdInstance?.Configure(modelBuilder);
         }
     }
 
-    private static readonly Lazy<HashSet<Type>> CachedEntities = new Lazy<HashSet<Type>>(() =>
+    private static readonly Lazy<HashSet<Type>> CachedEntities = new(() =>
     {
-        return AppDomain.CurrentDomain.GetAssemblies()
+        return [.. AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(assembly => assembly.GetTypes())
-            .Where(type => type.BaseType != null && type.BaseType == typeof(BaseEntity))
-            .ToHashSet();
+            .Where(type => type.BaseType != null && type.BaseType == typeof(BaseEntity))];
     });
 
-    private void ConfigureDbSets(ModelBuilder modelBuilder)
+    private static void ConfigureDbSets(ModelBuilder modelBuilder)
     {
         foreach (var entity in CachedEntities.Value)
         {

@@ -1,6 +1,6 @@
 using HoneyHub.Core.DataService.Entities;
 
-namespace HoneyHub.Core.DataServices.DataServices;
+namespace HoneyHub.Core.DataService.DataServices;
 
 public interface IRepository<T> where T : BaseEntity
 {
