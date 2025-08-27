@@ -18,13 +18,13 @@ public static class MappingServiceExtensions
         var config = new TypeAdapterConfig();
 
         // Scan this assembly for IRegister implementations (UsersMappings)
-        config.Scan(new[] { typeof(UsersMappings).Assembly });
+        config.Scan([typeof(UsersMappings).Assembly]);
 
         // Global conventions (adjust as you like)
         config.Default
               .IgnoreNullValues(true)
               .PreserveReference(true)
-              .NameMatchingStrategy(NameMatchingStrategy.TolerantIgnoreCase);
+              .NameMatchingStrategy(NameMatchingStrategy.IgnoreCase);
 
         // Register config + mapper
         services.AddSingleton(config);
