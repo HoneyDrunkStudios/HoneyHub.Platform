@@ -24,7 +24,7 @@ public static class MappingServiceExtensions
         config.Default
               .IgnoreNullValues(true)
               .PreserveReference(true)
-              .NameMatchingStrategy(NameMatchingStrategy.Flexible);
+              .NameMatchingStrategy(NameMatchingStrategy.TolerantIgnoreCase);
 
         // Register config + mapper
         services.AddSingleton(config);
