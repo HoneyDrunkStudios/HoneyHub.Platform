@@ -38,7 +38,9 @@ public sealed class UsersMappings : IRegister
         // Never map secrets (password/refresh token).
         config.NewConfig<User, UserEntity>()
               .Inherits<BaseModel, BaseEntity>()
+              // Ignore PasswordHash for security: never map or expose password hashes.
               .Ignore(nameof(UserEntity.PasswordHash))
+              // Ignore RefreshTokenHash for security: never map or expose refresh token hashes.
               .Ignore(nameof(UserEntity.RefreshTokenHash));
     }
 }
