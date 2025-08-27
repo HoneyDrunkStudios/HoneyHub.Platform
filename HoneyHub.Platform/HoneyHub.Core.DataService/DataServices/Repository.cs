@@ -2,14 +2,12 @@ using HoneyHub.Core.DataService.Context;
 using HoneyHub.Core.DataService.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HoneyHub.Core.DataServices.DataServices;
+namespace HoneyHub.Core.DataService.DataServices;
 
-public class Repository<T> : IRepository<T> where T : BaseEntity
+public class Repository<T>(BaseContext context) : IRepository<T> where T : BaseEntity
 {
-    protected readonly BaseContext _context;
+    protected readonly BaseContext _context = context ?? throw new ArgumentNullException(nameof(context));
     protected IQueryable<T> Table => _context.Set<T>();
-
-    public Repository(BaseContext context) => _context = context ?? throw new ArgumentNullException(nameof(context));
 
     #region Get
 
@@ -19,15 +17,9 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     #region Insert
 
-    public async Task Insert(T entity)
-    {
-        await _context.Set<T>().AddAsync(entity);
-    }
+    public async Task Insert(T entity) => await _context.Set<T>().AddAsync(entity);
 
-    public async Task Insert(List<T> entities)
-    {
-        await _context.Set<T>().AddRangeAsync(entities);
-    }
+    public async Task Insert(List<T> entities) => await _context.Set<T>().AddRangeAsync(entities);
 
     #endregion
 
@@ -72,10 +64,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
     /// </summary>
     /// <param name="cancellationToken">Cancellation token for the async operation</param>
     /// <returns>The number of state entries written to the database</returns>
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        return await _context.SaveChangesAsync(cancellationToken);
-    }
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => await _context.SaveChangesAsync(cancellationToken);
 
     #endregion
 }
