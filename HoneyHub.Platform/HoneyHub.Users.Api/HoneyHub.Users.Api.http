@@ -1,0 +1,11 @@
+@HoneyHub_Users_Api_HostAddress = http://localhost:5088
+
+### Create User
+POST {{HoneyHub_Users_Api_HostAddress}}/api/users HTTP/1.1
+Accept: application/json
+
+### Health (Development only)
+GET {{HoneyHub_Users_Api_HostAddress}}/alive HTTP/1.1
+
+### Readiness (Development only)
+GET {{HoneyHub_Users_Api_HostAddress}}/health HTTP/1.1

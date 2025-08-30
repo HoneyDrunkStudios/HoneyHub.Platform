@@ -20,7 +20,7 @@ public static class MappingServiceExtensions
         // Scan this assembly for IRegister implementations (UsersMappings)
         config.Scan([typeof(UsersMappings).Assembly]);
 
-        // Global conventions (adjust as you like)
+        // Global conventions
         config.Default
               .IgnoreNullValues(true)
               .PreserveReference(true)

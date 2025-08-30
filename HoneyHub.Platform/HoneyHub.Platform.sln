@@ -7,15 +7,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Platform.AppHost",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Platform.ServiceDefaults", "Shared\HoneyHub.Platform.ServiceDefaults\HoneyHub.Platform.ServiceDefaults.csproj", "{EAA7F2D4-6B55-852B-174C-0814BEF265ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Platform.ApiService", "Shared\HoneyHub.Platform.ApiService\HoneyHub.Platform.ApiService.csproj", "{C8D33BF3-F22E-395B-C6D7-C83544B95108}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Platform.Web", "Shared\HoneyHub.Platform.Web\HoneyHub.Platform.Web.csproj", "{F65A50B9-C956-83F7-4E63-19344168501D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Platform.Tests", "Shared\HoneyHub.Platform.Tests\HoneyHub.Platform.Tests.csproj", "{A58B9508-148A-7F42-1CDD-DBD9509343CA}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9F45DA7D-1131-4E26-9492-4FBD0DAD9A79}"
+	ProjectSection(SolutionItems) = preProject
+		azure-pipelines-user-database.yml = azure-pipelines-user-database.yml
+		..\.github\copilot-instructions.md = ..\.github\copilot-instructions.md
+		..\.github\workflows\github-pipelines-pr.yml = ..\.github\workflows\github-pipelines-pr.yml
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Domains", "Domains", "{017E1391-477D-4AC4-AA46-6DF558D6295D}"
 EndProject
@@ -23,11 +22,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Users", "Users", "{2D476B9C
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "HoneyHub.Users.Database", "Domains\Users\HoneyHub.Users.Database\HoneyHub.Users.Database.sqlproj", "{C839D6ED-1875-4812-A896-B358F79978BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Core.DataService", "HoneyHub.Core.DataService\HoneyHub.Core.DataService.csproj", "{331E7FF9-5AD3-4EB0-A92A-60D666CC5395}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Users.DataService", "Domains\Users\HoneyHub.Users.DataService\HoneyHub.Users.DataService.csproj", "{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Users.AppService", "Domains\Users\HoneyHub.Users.AppService\HoneyHub.Users.AppService.csproj", "{5DC4BA63-45CF-4345-8005-EF22B5C6640D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Core.DataService", "Shared\HoneyHub.Core.DataService\HoneyHub.Core.DataService.csproj", "{FDC53922-2FDF-4FF6-AB28-F5D7810421EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Users.Api", "HoneyHub.Users.Api\HoneyHub.Users.Api.csproj", "{BDB3CB99-79C6-16FB-1AF9-593C676F874D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,28 +44,12 @@ Global
 		{EAA7F2D4-6B55-852B-174C-0814BEF265ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAA7F2D4-6B55-852B-174C-0814BEF265ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAA7F2D4-6B55-852B-174C-0814BEF265ED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C8D33BF3-F22E-395B-C6D7-C83544B95108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C8D33BF3-F22E-395B-C6D7-C83544B95108}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C8D33BF3-F22E-395B-C6D7-C83544B95108}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C8D33BF3-F22E-395B-C6D7-C83544B95108}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F65A50B9-C956-83F7-4E63-19344168501D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F65A50B9-C956-83F7-4E63-19344168501D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F65A50B9-C956-83F7-4E63-19344168501D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F65A50B9-C956-83F7-4E63-19344168501D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A58B9508-148A-7F42-1CDD-DBD9509343CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A58B9508-148A-7F42-1CDD-DBD9509343CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A58B9508-148A-7F42-1CDD-DBD9509343CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A58B9508-148A-7F42-1CDD-DBD9509343CA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C839D6ED-1875-4812-A896-B358F79978BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C839D6ED-1875-4812-A896-B358F79978BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C839D6ED-1875-4812-A896-B358F79978BB}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{C839D6ED-1875-4812-A896-B358F79978BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C839D6ED-1875-4812-A896-B358F79978BB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C839D6ED-1875-4812-A896-B358F79978BB}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{331E7FF9-5AD3-4EB0-A92A-60D666CC5395}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{331E7FF9-5AD3-4EB0-A92A-60D666CC5395}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{331E7FF9-5AD3-4EB0-A92A-60D666CC5395}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{331E7FF9-5AD3-4EB0-A92A-60D666CC5395}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -73,6 +58,14 @@ Global
 		{5DC4BA63-45CF-4345-8005-EF22B5C6640D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5DC4BA63-45CF-4345-8005-EF22B5C6640D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5DC4BA63-45CF-4345-8005-EF22B5C6640D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDC53922-2FDF-4FF6-AB28-F5D7810421EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDC53922-2FDF-4FF6-AB28-F5D7810421EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDC53922-2FDF-4FF6-AB28-F5D7810421EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDC53922-2FDF-4FF6-AB28-F5D7810421EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDB3CB99-79C6-16FB-1AF9-593C676F874D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDB3CB99-79C6-16FB-1AF9-593C676F874D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDB3CB99-79C6-16FB-1AF9-593C676F874D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDB3CB99-79C6-16FB-1AF9-593C676F874D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,14 +73,12 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{446A17F2-5F60-4122-88E6-D1786717885D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{EAA7F2D4-6B55-852B-174C-0814BEF265ED} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{C8D33BF3-F22E-395B-C6D7-C83544B95108} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{F65A50B9-C956-83F7-4E63-19344168501D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{A58B9508-148A-7F42-1CDD-DBD9509343CA} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{2D476B9C-9303-48E8-8792-4D38279DBAAE} = {017E1391-477D-4AC4-AA46-6DF558D6295D}
 		{C839D6ED-1875-4812-A896-B358F79978BB} = {2D476B9C-9303-48E8-8792-4D38279DBAAE}
-		{331E7FF9-5AD3-4EB0-A92A-60D666CC5395} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{2BB1D2EA-BA5D-468E-9F0F-FD7E4A8DB7A1} = {2D476B9C-9303-48E8-8792-4D38279DBAAE}
 		{5DC4BA63-45CF-4345-8005-EF22B5C6640D} = {2D476B9C-9303-48E8-8792-4D38279DBAAE}
+		{FDC53922-2FDF-4FF6-AB28-F5D7810421EC} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{BDB3CB99-79C6-16FB-1AF9-593C676F874D} = {2D476B9C-9303-48E8-8792-4D38279DBAAE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {649B2EF0-52DC-4556-A0A1-66415B9ACA90}
