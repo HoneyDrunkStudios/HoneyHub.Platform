@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\HoneyHub.Core.DataService\HoneyHub.Core.DataService.csproj" />
+    <ProjectReference Include="..\..\..\Shared\HoneyHub.Core.DataService\HoneyHub.Core.DataService.csproj" />
   </ItemGroup>
 
 </Project>

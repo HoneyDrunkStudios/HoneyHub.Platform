@@ -12,12 +12,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HoneyHub.Platform.ApiService\HoneyHub.Platform.ApiService.csproj" />
-    <ProjectReference Include="..\HoneyHub.Platform.Web\HoneyHub.Platform.Web.csproj" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.4.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.4.1" />
+    <ProjectReference Include="..\..\HoneyHub.Users.Api\HoneyHub.Users.Api.csproj" />
   </ItemGroup>
 
 </Project>
