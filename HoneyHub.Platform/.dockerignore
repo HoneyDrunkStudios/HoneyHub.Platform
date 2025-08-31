@@ -1,0 +1,60 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/TestResults/
+**/coverage/
+**/*.coverage
+**/*.coveragexml
+
+# IDE/editor
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/*.rsuser
+**/*.suo
+**/*.swp
+**/*.tmp
+**/*.log
+**/*.lock.json
+**/*.lock
+
+# Git
+.git
+.gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker related
+**/Dockerfile.*
+**/docker-compose.*.yml
+**/docker-compose.*.yaml
+**/compose.*.yml
+**/compose.*.yaml
+
+# Local config & secrets
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/secrets.json
+**/.env
+
+# NuGet caches
+**/.nuget/
+
+# Keys & certs (safety net)
+**/*.pfx
+**/*.snk
+**/*.key
+**/*.pem
+**/*.crt
+
+# Node/JS
+**/node_modules/
+**/dist/
+**/build/
+
+# Test tooling outputs
+**/jest-results/
+**/playwright-report/
