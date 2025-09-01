@@ -1,7 +1,7 @@
 # azure-pipelines-database.yml
 trigger:
   branches: { include: [ main ] }
-  paths:    { include: [ 'HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/**', '**/*.sqlproj' ] }
+  paths:    { include: [ 'HoneyHub.Platform/Domains/Users/HoneyHub.Users.Database/**'] }
 pr: none
 
 pool:
