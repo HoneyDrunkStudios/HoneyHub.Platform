@@ -22,7 +22,7 @@ public class UserMap : IEntityMap
         entity.Property(x => x.EmailConfirmed).HasDefaultValue(false);
         entity.Property(x => x.PasswordHash).HasMaxLength(512);
         entity.Property(x => x.SecurityStamp).HasMaxLength(40).IsRequired();
-        entity.Property(x => x.ConcurrencyStamp).HasMaxLength(40).IsRequired();
+        entity.Property(x => x.ConcurrencyStamp).HasMaxLength(40).IsRequired().IsConcurrencyToken();
         entity.Property(x => x.PhoneNumber).HasMaxLength(32);
         entity.Property(x => x.PhoneNumberConfirmed).HasDefaultValue(false);
         entity.Property(x => x.TwoFactorEnabled).HasDefaultValue(false);

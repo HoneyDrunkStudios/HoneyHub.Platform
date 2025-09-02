@@ -13,7 +13,7 @@ public class RoleMap : IEntityMap
         entity.HasKey(x => x.Id);
         entity.Property(x => x.Name).HasMaxLength(256).IsRequired();
         entity.Property(x => x.NormalizedName).HasMaxLength(256).IsRequired();
-        entity.Property(x => x.ConcurrencyStamp).HasMaxLength(40).IsRequired();
+        entity.Property(x => x.ConcurrencyStamp).HasMaxLength(40).IsRequired().IsConcurrencyToken();
         entity.HasIndex(x => x.NormalizedName).IsUnique().HasDatabaseName("UK_Role_NormalizedName");
     }
 }
