@@ -1,54 +1,55 @@
 ﻿CREATE TABLE [dbo].[User]
 (
-	 -- Primary Identity
-    [Id]                    INT IDENTITY(1,1) NOT NULL
-        CONSTRAINT PK_Users_User PRIMARY KEY CLUSTERED,
-    
-    -- Public-facing identifier (non-enumerable)
-    [PublicId]              UNIQUEIDENTIFIER NOT NULL
-        CONSTRAINT DF_Users_User_PublicId DEFAULT NEWSEQUENTIALID()
-        CONSTRAINT UK_Users_User_PublicId UNIQUE NONCLUSTERED,
-    
-    -- Core Identity Fields
-    [Username]              NVARCHAR(50) NOT NULL
-        CONSTRAINT UK_Users_User_Username UNIQUE NONCLUSTERED,
-    
-    [Email]                 NVARCHAR(256) NOT NULL
-        CONSTRAINT UK_Users_User_Email UNIQUE NONCLUSTERED,
-    
-    -- Authentication Fields
-    [PasswordHash]          NVARCHAR(512) NULL,        -- NULL for OAuth-only accounts
-    [Provider]              NVARCHAR(50) NULL,         -- OAuth provider (Google, Microsoft, etc.)
-    [ProviderId]            NVARCHAR(256) NULL,        -- External provider user ID
-    [RefreshTokenHash]      NVARCHAR(MAX) NULL,        -- Hashed JWT refresh token storage
-    
-    -- Account Status Fields
-    [EmailVerified]         BIT NOT NULL
-        CONSTRAINT DF_Users_User_EmailVerified DEFAULT 0,
-    
-    [IsActive]              BIT NOT NULL
-        CONSTRAINT DF_Users_User_IsActive DEFAULT 1,
-    
-    [IsDeleted]             BIT NOT NULL
-        CONSTRAINT DF_Users_User_IsDeleted DEFAULT 0,
-    
-    -- Subscription Management
-    [SubscriptionPlanId]    INT NOT NULL
-        CONSTRAINT DF_Users_User_SubscriptionPlanId DEFAULT 1,
-    
-    -- Audit Fields
-    [CreatedAt]             DATETIME2 NOT NULL
-        CONSTRAINT DF_Users_User_CreatedAt DEFAULT SYSUTCDATETIME(),
-    
-    [CreatedBy]             NVARCHAR(100) NOT NULL
-        CONSTRAINT DF_Users_User_CreatedBy DEFAULT 'System',
-    
-    [UpdatedAt]             DATETIME2 NULL,
-    [UpdatedBy]             NVARCHAR(100) NULL,
-    [LastLoginAt]           DATETIME2 NULL,
-    
-    -- Foreign Key Constraints
-    CONSTRAINT FK_Users_User_SubscriptionPlan 
-        FOREIGN KEY ([SubscriptionPlanId]) 
-        REFERENCES [dbo].[SubscriptionPlan]([Id])
+    -- Primary key
+    [Id]                   INT IDENTITY(1,1) NOT NULL
+        CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED,
+
+    -- Public identifier
+    [PublicId]             UNIQUEIDENTIFIER NOT NULL
+        CONSTRAINT [DF_User_PublicId] DEFAULT NEWSEQUENTIALID(),
+
+    -- Identity core
+    [UserName]             NVARCHAR(256) NOT NULL,
+    [NormalizedUserName]   NVARCHAR(256) NOT NULL,
+    [Email]                NVARCHAR(256) NOT NULL,
+    [NormalizedEmail]      NVARCHAR(256) NOT NULL,
+    [EmailConfirmed]       BIT NOT NULL CONSTRAINT [DF_User_EmailConfirmed] DEFAULT (0),
+
+    [PasswordHash]         NVARCHAR(512) NULL,
+    [SecurityStamp]        NVARCHAR(40)  NOT NULL CONSTRAINT [DF_User_SecurityStamp] DEFAULT (CONVERT(NVARCHAR(40), NEWID())),
+    [ConcurrencyStamp]     NVARCHAR(40)  NOT NULL CONSTRAINT [DF_User_ConcurrencyStamp] DEFAULT (CONVERT(NVARCHAR(40), NEWID())),
+
+    [PhoneNumber]          NVARCHAR(32)  NULL,
+    [PhoneNumberConfirmed] BIT NOT NULL CONSTRAINT [DF_User_PhoneNumberConfirmed] DEFAULT (0),
+
+    [TwoFactorEnabled]     BIT NOT NULL CONSTRAINT [DF_User_TwoFactorEnabled] DEFAULT (0),
+    [LockoutEnd]           DATETIMEOFFSET NULL,
+    [LockoutEnabled]       BIT NOT NULL CONSTRAINT [DF_User_LockoutEnabled] DEFAULT (1),
+    [AccessFailedCount]    INT NOT NULL CONSTRAINT [DF_User_AccessFailedCount] DEFAULT (0),
+
+    -- Domain flags
+    [IsActive]             BIT NOT NULL CONSTRAINT [DF_User_IsActive] DEFAULT (1),
+    [IsDeleted]            BIT NOT NULL CONSTRAINT [DF_User_IsDeleted] DEFAULT (0),
+
+    -- Subscription
+    [SubscriptionPlanId]   INT NOT NULL CONSTRAINT [DF_User_SubscriptionPlanId] DEFAULT (1),
+
+    -- Audit
+    [CreatedAt]            DATETIME2 NOT NULL CONSTRAINT [DF_User_CreatedAt] DEFAULT SYSUTCDATETIME(),
+    [CreatedBy]            NVARCHAR(100) NOT NULL CONSTRAINT [DF_User_CreatedBy] DEFAULT (N'System'),
+    [UpdatedAt]            DATETIME2 NULL,
+    [UpdatedBy]            NVARCHAR(100) NULL,
+    [LastLoginAt]          DATETIME2 NULL,
+
+    -- Constraints / indexes
+    CONSTRAINT [UK_User_PublicId] UNIQUE NONCLUSTERED ([PublicId]),
+    CONSTRAINT [UK_User_NormalizedUserName] UNIQUE NONCLUSTERED ([NormalizedUserName]),
+    CONSTRAINT [UK_User_NormalizedEmail] UNIQUE NONCLUSTERED ([NormalizedEmail]),
+
+    CONSTRAINT [FK_User_SubscriptionPlan]
+        FOREIGN KEY ([SubscriptionPlanId]) REFERENCES [dbo].[SubscriptionPlan]([Id]) ON DELETE NO ACTION
 );
+GO
+
+CREATE NONCLUSTERED INDEX [IX_User_SubscriptionPlanId] ON [dbo].[User]([SubscriptionPlanId]);
+GO

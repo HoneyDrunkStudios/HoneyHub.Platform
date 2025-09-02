@@ -1,5 +1,6 @@
 using HoneyHub.Core.DataService.Entities;
 using HoneyHub.Users.DataService.Entities.Subscriptions;
+using HoneyHub.Users.DataService.Entities.Identity;
 
 namespace HoneyHub.Users.DataService.Entities.Users;
 
@@ -8,27 +9,29 @@ public class UserEntity : BaseEntity
     // Public-facing identifier (non-enumerable)
     public required Guid PublicId { get; set; }
 
-    // Core Identity Fields
-    public required string Username { get; set; }
+    // Identity core
+    public required string UserName { get; set; }
+    public required string NormalizedUserName { get; set; }
     public required string Email { get; set; }
+    public required string NormalizedEmail { get; set; }
+    public bool EmailConfirmed { get; set; } = false;
 
-    // Authentication Fields
+    // Authentication & security
     public string? PasswordHash { get; set; }
-    /// <summary>
-    /// The name of the external authentication provider (e.g., Google, Facebook, etc.).
-    /// Used to identify the source of the user's authentication.
-    /// </summary>
-    public string? Provider { get; set; }
+    public required string SecurityStamp { get; set; }
+    public required string ConcurrencyStamp { get; set; }
 
-    /// <summary>
-    /// The unique identifier assigned to the user by the external authentication provider.
-    /// This is typically used to link the user account with the provider's system.
-    /// </summary>
-    public string? ProviderId { get; set; }
-    public string? RefreshTokenHash { get; set; }
+    // Contact
+    public string? PhoneNumber { get; set; }
+    public bool PhoneNumberConfirmed { get; set; } = false;
 
-    // Account Status Fields
-    public bool EmailVerified { get; set; } = false;
+    // MFA & lockout
+    public bool TwoFactorEnabled { get; set; } = false;
+    public DateTimeOffset? LockoutEnd { get; set; }
+    public bool LockoutEnabled { get; set; } = true;
+    public int AccessFailedCount { get; set; } = 0;
+
+    // Domain flags
     public bool IsActive { get; set; } = true;
     public bool IsDeleted { get; set; } = false;
 
@@ -40,4 +43,11 @@ public class UserEntity : BaseEntity
 
     // Navigation Properties
     public SubscriptionPlanEntity? SubscriptionPlan { get; set; }
+
+    // Identity navigation collections
+    public ICollection<UserRoleEntity> Roles { get; set; } = [];
+    public ICollection<UserClaimEntity> Claims { get; set; } = [];
+    public ICollection<UserLoginEntity> Logins { get; set; } = [];
+    public ICollection<UserTokenEntity> Tokens { get; set; } = [];
+    public ICollection<RefreshTokenEntity> RefreshTokens { get; set; } = [];
 }

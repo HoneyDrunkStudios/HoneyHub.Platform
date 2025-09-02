@@ -65,6 +65,13 @@
   <ItemGroup>
     <Build Include="Tables\SubscriptionPlan.sql" />
     <Build Include="Tables\User.sql" />
+    <Build Include="Tables\Role.sql" />
+    <Build Include="Tables\UserRole.sql" />
+    <Build Include="Tables\UserClaim.sql" />
+    <Build Include="Tables\RoleClaim.sql" />
+    <Build Include="Tables\UserLogin.sql" />
+    <Build Include="Tables\UserToken.sql" />
+    <Build Include="Tables\RefreshToken.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Scripts\Indexes\SubscriptionPlanIndexes.sql" />
