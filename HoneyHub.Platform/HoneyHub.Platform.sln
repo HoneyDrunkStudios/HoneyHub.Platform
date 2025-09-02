@@ -27,7 +27,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Users.Api", "Honey
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Powershell", "Powershell", "{AF8D10CF-08B0-44C3-8711-75B4F7E72C7C}"
 	ProjectSection(SolutionItems) = preProject
-		rebuild-users-api.ps1 = rebuild-users-api.ps1
+		Powershell\rebuild-users-api.ps1 = Powershell\rebuild-users-api.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Markdown", "Markdown", "{41EA3C2E-B4A7-4857-973F-A720F98A8AA6}"
@@ -38,7 +38,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Yml", "Yml", "{80CE1130-E903-41D2-AF93-500B2FDA6AAC}"
 	ProjectSection(SolutionItems) = preProject
 		azure-pipelines-user-database.yml = azure-pipelines-user-database.yml
-		..\.github\workflows\github-pipelines-pr.yml = ..\.github\workflows\github-pipelines-pr.yml
 	EndProjectSection
 EndProject
 Global

@@ -35,12 +35,23 @@ public sealed class UsersMappings : IRegister
               .Inherits<BaseEntity, BaseModel>();
 
         // ─── User → UserEntity (DTO -> Entity) ─────────────────────────
-        // Never map secrets (password/refresh token).
+        // Never map secrets (password) or identity-managed fields.
         config.NewConfig<User, UserEntity>()
               .Inherits<BaseModel, BaseEntity>()
-              // Ignore PasswordHash for security: never map or expose password hashes.
               .Ignore(nameof(UserEntity.PasswordHash))
-              // Ignore RefreshTokenHash for security: never map or expose refresh token hashes.
-              .Ignore(nameof(UserEntity.RefreshTokenHash));
+              .Ignore(nameof(UserEntity.SecurityStamp))
+              .Ignore(nameof(UserEntity.ConcurrencyStamp))
+              .Ignore(nameof(UserEntity.EmailConfirmed))
+              .Ignore(nameof(UserEntity.PhoneNumberConfirmed))
+              .Ignore(nameof(UserEntity.TwoFactorEnabled))
+              .Ignore(nameof(UserEntity.LockoutEnd))
+              .Ignore(nameof(UserEntity.LockoutEnabled))
+              .Ignore(nameof(UserEntity.AccessFailedCount))
+              // Navigation collections should never be set via DTO mapping
+              .Ignore(nameof(UserEntity.Roles))
+              .Ignore(nameof(UserEntity.Claims))
+              .Ignore(nameof(UserEntity.Logins))
+              .Ignore(nameof(UserEntity.Tokens))
+              .Ignore(nameof(UserEntity.RefreshTokens));
     }
 }
