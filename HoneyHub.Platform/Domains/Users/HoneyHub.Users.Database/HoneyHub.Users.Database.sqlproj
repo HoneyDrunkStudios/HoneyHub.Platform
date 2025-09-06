@@ -52,6 +52,9 @@
     <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
     <VisualStudioVersion Condition="'$(SSDTExists)' == ''">11.0</VisualStudioVersion>
   </PropertyGroup>
+  <PropertyGroup>
+  <PostDeploy>Scripts\Post-Deployment.sql</PostDeploy>
+</PropertyGroup>
   <Import Condition="'$(SQLDBExtensionsRefPath)' != ''" Project="$(SQLDBExtensionsRefPath)\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <ItemGroup>
@@ -78,5 +81,18 @@
     <None Include="Scripts\Indexes\UserIndexes.sql" />
     <None Include="Scripts\Constraints\UserContstraints.sql" />
     <None Include="Scripts\Data\SubscriptionPlanDataSeeding.sql" />
+    <None Include="Scripts\Post-Deployment.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Scripts\Post-Deployment.sql">
+      <SubType>Code</SubType>
+    </None>
+    <None Include="Scripts\Data\SubscriptionPlanDataSeeding.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SqlCmdVariable Include="SeedData">
+      <DefaultValue>0</DefaultValue>
+    </SqlCmdVariable>
   </ItemGroup>
 </Project>
