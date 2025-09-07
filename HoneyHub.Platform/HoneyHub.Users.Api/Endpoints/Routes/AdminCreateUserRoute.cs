@@ -42,8 +42,8 @@ public static class AdminCreateUserRoute
         {
             // Validate request model using FluentValidation
             var validationResult = FluentValidationHelpers.ValidateAndCreateResponse(
-                request, 
-                validator, 
+                request,
+                validator,
                 "administrative user creation");
 
             if (validationResult is not null)

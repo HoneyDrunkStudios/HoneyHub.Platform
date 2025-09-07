@@ -42,8 +42,8 @@ public static class CreateExternalUserRoute
         {
             // Validate request model using FluentValidation
             var validationResult = FluentValidationHelpers.ValidateAndCreateResponse(
-                request, 
-                validator, 
+                request,
+                validator,
                 "external user creation");
 
             if (validationResult is not null)

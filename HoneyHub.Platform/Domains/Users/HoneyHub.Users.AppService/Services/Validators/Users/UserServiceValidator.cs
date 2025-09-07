@@ -77,7 +77,7 @@ public class UserServiceValidator(
 
         // Domain-specific business rules can be added here
         // Basic field validation is now handled by FluentValidation
-        
+
         // Example: Additional business rules could include:
         // - Username uniqueness checks (if not handled at database level)
         // - Domain-specific password policies beyond basic technical requirements
@@ -94,7 +94,7 @@ public class UserServiceValidator(
 
         // Domain-specific business rules can be added here
         // Basic field validation is now handled by FluentValidation
-        
+
         // Example: Additional business rules could include:
         // - Provider-specific validation logic
         // - Domain-specific restrictions on external providers
@@ -114,7 +114,7 @@ public class UserServiceValidator(
 
         // Domain-specific business rules can be added here
         // Basic field validation is now handled by FluentValidation
-        
+
         // Example: Additional business rules could include:
         // - Admin-specific user creation policies
         // - Role-based restrictions on admin user creation

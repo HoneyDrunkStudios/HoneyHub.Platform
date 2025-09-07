@@ -42,8 +42,8 @@ public static class CreatePasswordUserRoute
         {
             // Validate request model using FluentValidation
             var validationResult = FluentValidationHelpers.ValidateAndCreateResponse(
-                request, 
-                validator, 
+                request,
+                validator,
                 "password user creation");
 
             if (validationResult is not null)
