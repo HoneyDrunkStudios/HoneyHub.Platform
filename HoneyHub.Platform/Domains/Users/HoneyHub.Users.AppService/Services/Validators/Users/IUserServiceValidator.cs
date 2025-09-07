@@ -1,7 +1,6 @@
-
 using HoneyHub.Users.Api.Sdk.Requests;
 
-namespace HoneyHub.Users.AppService.Services.Validators;
+namespace HoneyHub.Users.AppService.Services.Validators.Users;
 
 /// <summary>
 /// Validation service interface for user-related business rules and data integrity checks.

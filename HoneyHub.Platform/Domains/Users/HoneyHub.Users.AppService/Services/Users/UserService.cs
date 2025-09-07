@@ -1,6 +1,6 @@
 using HoneyHub.Users.Api.Sdk.Requests;
 using HoneyHub.Users.AppService.Services.SecurityServices;
-using HoneyHub.Users.AppService.Services.Validators;
+using HoneyHub.Users.AppService.Services.Validators.Users;
 using HoneyHub.Users.DataService.DataServices.Users;
 using HoneyHub.Users.DataService.Entities.Identity;
 using HoneyHub.Users.DataService.Entities.Users;

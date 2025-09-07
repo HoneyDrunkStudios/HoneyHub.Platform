@@ -2,7 +2,7 @@ using HoneyHub.Users.Api.Sdk.Requests;
 using HoneyHub.Users.DataService.DataServices.Subscriptions;
 using Microsoft.Extensions.Logging;
 
-namespace HoneyHub.Users.AppService.Services.Validators;
+namespace HoneyHub.Users.AppService.Services.Validators.Users;
 
 /// <summary>
 /// Validation service for user-related business rules and data integrity checks.
@@ -67,6 +67,52 @@ public class UserServiceValidator(
     }
 
     /// <summary>
+    /// Validates basic user identity fields (username and email).
+    /// Implements fundamental data integrity requirements for user creation.
+    /// </summary>
+    private static void ValidateBasicUserFields(string? username, string? email)
+    {
+        if (string.IsNullOrWhiteSpace(username?.Trim()))
+            throw new ArgumentException("Username cannot be empty or whitespace.");
+
+        if (string.IsNullOrWhiteSpace(email?.Trim()))
+            throw new ArgumentException("Email cannot be empty or whitespace.");
+    }
+
+    /// <summary>
+    /// Validates password requirement for authentication methods that require passwords.
+    /// Implements data integrity rule for password-based authentication.
+    /// </summary>
+    private static void ValidatePasswordRequirement(string? password, string authType)
+    {
+        if (string.IsNullOrWhiteSpace(password))
+            throw new ArgumentException($"Password cannot be empty for {authType} authentication.");
+    }
+
+    /// <summary>
+    /// Validates provider ID requirement for external authentication.
+    /// Implements data integrity rule for external authentication providers.
+    /// </summary>
+    private static void ValidateProviderIdRequirement(string? providerId)
+    {
+        if (string.IsNullOrWhiteSpace(providerId?.Trim()))
+            throw new ArgumentException("External provider ID is required for external authentication.");
+    }
+
+    /// <summary>
+    /// Validates that username and email are not identical (case-insensitive).
+    /// Implements core business rule for user identity uniqueness.
+    /// </summary>
+    private void ValidateUsernameEmailUniqueness(string username, string email, string validationType)
+    {
+        if (string.Equals(username.Trim(), email.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("{ValidationType} user creation validation failed: Username and email cannot be identical", validationType);
+            throw new ArgumentException("Username and email address cannot be identical.");
+        }
+    }
+
+    /// <summary>
     /// Validates password user creation request for business rule compliance.
     /// Implements validation rules specific to password-based authentication.
     /// </summary>
@@ -74,29 +120,14 @@ public class UserServiceValidator(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Basic validation - data annotations handle most validation,
-        // but we can add business-specific rules here
-        if (string.IsNullOrWhiteSpace(request.Username?.Trim()))
-        {
-            throw new ArgumentException("Username cannot be empty or whitespace.");
-        }
+        // Basic field validation
+        ValidateBasicUserFields(request.Username, request.Email);
 
-        if (string.IsNullOrWhiteSpace(request.Email?.Trim()))
-        {
-            throw new ArgumentException("Email cannot be empty or whitespace.");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Password))
-        {
-            throw new ArgumentException("Password cannot be empty for password-based authentication.");
-        }
+        // Password requirement validation
+        ValidatePasswordRequirement(request.Password, "password-based");
 
         // Business rule: Username and email cannot be the same (case-insensitive)
-        if (string.Equals(request.Username.Trim(), request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
-        {
-            _logger.LogWarning("Password user creation validation failed: Username and email cannot be identical");
-            throw new ArgumentException("Username and email address cannot be identical.");
-        }
+        ValidateUsernameEmailUniqueness(request.Username, request.Email, "Password");
     }
 
     /// <summary>
@@ -107,28 +138,14 @@ public class UserServiceValidator(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Basic validation
-        if (string.IsNullOrWhiteSpace(request.Username?.Trim()))
-        {
-            throw new ArgumentException("Username cannot be empty or whitespace.");
-        }
+        // Basic field validation
+        ValidateBasicUserFields(request.Username, request.Email);
 
-        if (string.IsNullOrWhiteSpace(request.Email?.Trim()))
-        {
-            throw new ArgumentException("Email cannot be empty or whitespace.");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.ProviderId?.Trim()))
-        {
-            throw new ArgumentException("External provider ID is required for external authentication.");
-        }
+        // Provider ID requirement validation
+        ValidateProviderIdRequirement(request.ProviderId);
 
         // Business rule: Username and email cannot be the same (case-insensitive)
-        if (string.Equals(request.Username.Trim(), request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
-        {
-            _logger.LogWarning("External user creation validation failed: Username and email cannot be identical");
-            throw new ArgumentException("Username and email address cannot be identical.");
-        }
+        ValidateUsernameEmailUniqueness(request.Username, request.Email, "External");
     }
 
     /// <summary>
@@ -139,25 +156,13 @@ public class UserServiceValidator(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Basic validation
-        if (string.IsNullOrWhiteSpace(request.Username?.Trim()))
-        {
-            throw new ArgumentException("Username cannot be empty or whitespace.");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Email?.Trim()))
-        {
-            throw new ArgumentException("Email cannot be empty or whitespace.");
-        }
+        // Basic field validation
+        ValidateBasicUserFields(request.Username, request.Email);
 
         // Validate authentication method
         ValidateAuthenticationMethod(request);
 
         // Business rule: Username and email cannot be the same (case-insensitive)
-        if (string.Equals(request.Username.Trim(), request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
-        {
-            _logger.LogWarning("Admin user creation validation failed: Username and email cannot be identical");
-            throw new ArgumentException("Username and email address cannot be identical.");
-        }
+        ValidateUsernameEmailUniqueness(request.Username, request.Email, "Admin");
     }
 }

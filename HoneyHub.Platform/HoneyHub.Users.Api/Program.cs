@@ -3,7 +3,7 @@ using HoneyHub.Users.Api.Endpoints;
 using HoneyHub.Users.AppService.Mapping;
 using HoneyHub.Users.AppService.Services.SecurityServices;
 using HoneyHub.Users.AppService.Services.Users;
-using HoneyHub.Users.AppService.Services.Validators;
+using HoneyHub.Users.AppService.Services.Validators.Users;
 using HoneyHub.Users.DataService.Context;
 using HoneyHub.Users.DataService.DataServices.Subscriptions;
 using HoneyHub.Users.DataService.DataServices.Users;
