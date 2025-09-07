@@ -1,3 +1,4 @@
+using FluentValidation;
 using HoneyHub.Users.Api.Endpoints.Shared;
 using HoneyHub.Users.Api.Sdk.Requests;
 using HoneyHub.Users.AppService.Services.Users;
@@ -8,7 +9,7 @@ namespace HoneyHub.Users.Api.Endpoints.Routes;
 /// <summary>
 /// Administrative user creation endpoint following RESTful conventions.
 /// Matches SDK AdminCreateAsync method expectations with simple Guid response.
-/// TODO: Add authorization middleware to restrict access to administrators only.
+/// Integrates FluentValidation for comprehensive input validation.
 /// </summary>
 public static class AdminCreateUserRoute
 {
@@ -19,40 +20,35 @@ public static class AdminCreateUserRoute
     {
         return endpoints.MapPost("/admin", HandleAsync)
                        .WithName("AdminCreateUser")
-                       .WithSummary("Create a new user with administrative privileges")
-                       .WithDescription("Creates a new user account with administrative configuration options. Returns the user's public ID on success.")
+                       .WithSummary("Create a new user as administrator")
+                       .WithDescription("Creates a new user account with administrative privileges and configuration options. Returns the user's public ID on success.")
                        .Produces<Guid>(StatusCodes.Status201Created)
                        .Produces<ValidationProblemDetails>(StatusCodes.Status400BadRequest)
-                       .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
-                       .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
                        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
     }
 
     /// <summary>
     /// Handles administrative user creation requests.
     /// Returns only PublicId on success to match SDK expectations.
+    /// Uses FluentValidation for comprehensive input validation.
     /// </summary>
     private static async Task<IResult> HandleAsync(
         [FromBody] AdminCreateUserRequest request,
+        IValidator<AdminCreateUserRequest> validator,
         IUserService userService,
         CancellationToken cancellationToken)
     {
         try
         {
-            // TODO: Add authorization check here using shared helper
-            // Example implementation:
-            // if (!httpContext.User.IsInRole("Administrator"))
-            // {
-            //     return EndpointResponseHelpers.CreateForbiddenResponse(
-            //         "Administrator privileges required for this operation.");
-            // }
+            // Validate request model using FluentValidation
+            var validationResult = FluentValidationHelpers.ValidateAndCreateResponse(
+                request, 
+                validator, 
+                "administrative user creation");
 
-            // Validate request model using shared validation logic
-            if (!EndpointResponseHelpers.ValidateRequest(request, out var validationErrors))
+            if (validationResult is not null)
             {
-                return EndpointResponseHelpers.CreateValidationProblemResponse(
-                    validationErrors,
-                    "One or more validation errors occurred during administrative user creation.");
+                return validationResult;
             }
 
             // Create user via application service

@@ -1,3 +1,4 @@
+using FluentValidation;
 using HoneyHub.Users.Api.Endpoints.Shared;
 using HoneyHub.Users.Api.Sdk.Requests;
 using HoneyHub.Users.AppService.Services.Users;
@@ -8,6 +9,7 @@ namespace HoneyHub.Users.Api.Endpoints.Routes;
 /// <summary>
 /// External user creation endpoint following RESTful conventions.
 /// Matches SDK CreateExternalAsync method expectations with simple Guid response.
+/// Integrates FluentValidation for comprehensive input validation.
 /// </summary>
 public static class CreateExternalUserRoute
 {
@@ -28,20 +30,25 @@ public static class CreateExternalUserRoute
     /// <summary>
     /// Handles external user creation requests.
     /// Returns only PublicId on success to match SDK expectations.
+    /// Uses FluentValidation for comprehensive input validation.
     /// </summary>
     private static async Task<IResult> HandleAsync(
         [FromBody] CreateExternalUserRequest request,
+        IValidator<CreateExternalUserRequest> validator,
         IUserService userService,
         CancellationToken cancellationToken)
     {
         try
         {
-            // Validate request model using shared validation logic
-            if (!EndpointResponseHelpers.ValidateRequest(request, out var validationErrors))
+            // Validate request model using FluentValidation
+            var validationResult = FluentValidationHelpers.ValidateAndCreateResponse(
+                request, 
+                validator, 
+                "external user creation");
+
+            if (validationResult is not null)
             {
-                return EndpointResponseHelpers.CreateValidationProblemResponse(
-                    validationErrors,
-                    "One or more validation errors occurred during external user creation.");
+                return validationResult;
             }
 
             // Create user via application service

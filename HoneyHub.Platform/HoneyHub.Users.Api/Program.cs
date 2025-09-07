@@ -1,5 +1,6 @@
 using HoneyHub.Platform.ServiceDefaults;
 using HoneyHub.Users.Api.Endpoints;
+using HoneyHub.Users.Api.Extensions;
 using HoneyHub.Users.AppService.Mapping;
 using HoneyHub.Users.AppService.Services.SecurityServices;
 using HoneyHub.Users.AppService.Services.Users;
@@ -44,7 +45,8 @@ builder.Services.AddUsersMappings();
 builder.Services.AddScoped<IUserService, UserService>();
 
 // Validation services
-builder.Services.AddScoped<IUserServiceValidator, UserServiceValidator>();
+builder.Services.AddApiValidation(); // FluentValidation for API requests
+builder.Services.AddScoped<IUserServiceValidator, UserServiceValidator>(); // Business rules
 
 // Data services
 builder.Services.AddScoped<IUserDataService, UserDataService>();

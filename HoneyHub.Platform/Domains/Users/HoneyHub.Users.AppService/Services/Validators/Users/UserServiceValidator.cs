@@ -5,8 +5,8 @@ using Microsoft.Extensions.Logging;
 namespace HoneyHub.Users.AppService.Services.Validators.Users;
 
 /// <summary>
-/// Validation service for user-related business rules and data integrity checks.
-/// Encapsulates validation logic to maintain clean separation of concerns in UserService.
+/// Business rule validation service for user-related domain logic and data integrity checks.
+/// Focuses on domain-specific validation rules while technical validation is handled by FluentValidation.
 /// Implements domain-specific validation rules while ensuring data consistency.
 /// </summary>
 /// <remarks>
@@ -52,6 +52,7 @@ public class UserServiceValidator(
     /// <summary>
     /// Validates authentication method configuration for administrative user creation.
     /// Implements business rule that admin users must have at least one authentication method.
+    /// Note: Basic field validation is now handled by FluentValidation.
     /// </summary>
     public void ValidateAuthenticationMethod(AdminCreateUserRequest request)
     {
@@ -67,102 +68,56 @@ public class UserServiceValidator(
     }
 
     /// <summary>
-    /// Validates basic user identity fields (username and email).
-    /// Implements fundamental data integrity requirements for user creation.
-    /// </summary>
-    private static void ValidateBasicUserFields(string? username, string? email)
-    {
-        if (string.IsNullOrWhiteSpace(username?.Trim()))
-            throw new ArgumentException("Username cannot be empty or whitespace.");
-
-        if (string.IsNullOrWhiteSpace(email?.Trim()))
-            throw new ArgumentException("Email cannot be empty or whitespace.");
-    }
-
-    /// <summary>
-    /// Validates password requirement for authentication methods that require passwords.
-    /// Implements data integrity rule for password-based authentication.
-    /// </summary>
-    private static void ValidatePasswordRequirement(string? password, string authType)
-    {
-        if (string.IsNullOrWhiteSpace(password))
-            throw new ArgumentException($"Password cannot be empty for {authType} authentication.");
-    }
-
-    /// <summary>
-    /// Validates provider ID requirement for external authentication.
-    /// Implements data integrity rule for external authentication providers.
-    /// </summary>
-    private static void ValidateProviderIdRequirement(string? providerId)
-    {
-        if (string.IsNullOrWhiteSpace(providerId?.Trim()))
-            throw new ArgumentException("External provider ID is required for external authentication.");
-    }
-
-    /// <summary>
-    /// Validates that username and email are not identical (case-insensitive).
-    /// Implements core business rule for user identity uniqueness.
-    /// </summary>
-    private void ValidateUsernameEmailUniqueness(string username, string email, string validationType)
-    {
-        if (string.Equals(username.Trim(), email.Trim(), StringComparison.OrdinalIgnoreCase))
-        {
-            _logger.LogWarning("{ValidationType} user creation validation failed: Username and email cannot be identical", validationType);
-            throw new ArgumentException("Username and email address cannot be identical.");
-        }
-    }
-
-    /// <summary>
     /// Validates password user creation request for business rule compliance.
-    /// Implements validation rules specific to password-based authentication.
+    /// Focuses on domain-specific rules as technical validation is handled by FluentValidation.
     /// </summary>
     public void ValidatePasswordUserRequest(CreatePasswordUserRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Basic field validation
-        ValidateBasicUserFields(request.Username, request.Email);
-
-        // Password requirement validation
-        ValidatePasswordRequirement(request.Password, "password-based");
-
-        // Business rule: Username and email cannot be the same (case-insensitive)
-        ValidateUsernameEmailUniqueness(request.Username, request.Email, "Password");
+        // Domain-specific business rules can be added here
+        // Basic field validation is now handled by FluentValidation
+        
+        // Example: Additional business rules could include:
+        // - Username uniqueness checks (if not handled at database level)
+        // - Domain-specific password policies beyond basic technical requirements
+        // - Business-specific username patterns or restrictions
     }
 
     /// <summary>
     /// Validates external user creation request for business rule compliance.
-    /// Implements validation rules specific to external authentication providers.
+    /// Focuses on domain-specific rules as technical validation is handled by FluentValidation.
     /// </summary>
     public void ValidateExternalUserRequest(CreateExternalUserRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Basic field validation
-        ValidateBasicUserFields(request.Username, request.Email);
-
-        // Provider ID requirement validation
-        ValidateProviderIdRequirement(request.ProviderId);
-
-        // Business rule: Username and email cannot be the same (case-insensitive)
-        ValidateUsernameEmailUniqueness(request.Username, request.Email, "External");
+        // Domain-specific business rules can be added here
+        // Basic field validation is now handled by FluentValidation
+        
+        // Example: Additional business rules could include:
+        // - Provider-specific validation logic
+        // - Domain-specific restrictions on external providers
+        // - Business-specific external user policies
     }
 
     /// <summary>
     /// Validates administrative user creation request for business rule compliance.
-    /// Performs comprehensive validation including authentication method verification.
+    /// Performs domain-specific validation including authentication method verification.
     /// </summary>
     public void ValidateAdminUserRequest(AdminCreateUserRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Basic field validation
-        ValidateBasicUserFields(request.Username, request.Email);
-
-        // Validate authentication method
+        // Validate authentication method (domain business rule)
         ValidateAuthenticationMethod(request);
 
-        // Business rule: Username and email cannot be the same (case-insensitive)
-        ValidateUsernameEmailUniqueness(request.Username, request.Email, "Admin");
+        // Domain-specific business rules can be added here
+        // Basic field validation is now handled by FluentValidation
+        
+        // Example: Additional business rules could include:
+        // - Admin-specific user creation policies
+        // - Role-based restrictions on admin user creation
+        // - Audit requirements for admin-created users
     }
 }
