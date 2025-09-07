@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace HoneyHub.Users.Api.Endpoints.Shared;
@@ -18,11 +17,11 @@ public static class EndpointResponseHelpers
     /// <param name="detail">Detailed description of the validation failure context</param>
     /// <returns>ValidationProblem result with standardized format</returns>
     public static IResult CreateValidationProblemResponse(
-        IDictionary<string, string[]> validationErrors, 
+        IDictionary<string, string[]> validationErrors,
         string detail)
     {
-        return Results.ValidationProblem(validationErrors, 
-            title: "Validation Failed", 
+        return Results.ValidationProblem(validationErrors,
+            title: "Validation Failed",
             detail: detail);
     }
 
@@ -80,13 +79,13 @@ public static class EndpointResponseHelpers
     {
         var validationResults = new List<ValidationResult>();
         var validationContext = new ValidationContext(request!);
-        
+
         var isValid = Validator.TryValidateObject(request!, validationContext, validationResults, true);
-        
+
         validationErrors = validationResults.ToDictionary(
             vr => vr.MemberNames.FirstOrDefault() ?? "Unknown",
             vr => new[] { vr.ErrorMessage ?? "Validation failed" });
-        
+
         return isValid;
     }
 

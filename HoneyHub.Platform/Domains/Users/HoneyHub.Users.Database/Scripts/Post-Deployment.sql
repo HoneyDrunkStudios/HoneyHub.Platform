@@ -4,7 +4,7 @@
 IF '$(SeedData)' = '1'
 BEGIN
     PRINT 'Seeding SubscriptionPlan...';
-    :r ./Scripts/Data/SubscriptionPlanDataSeeding.sql
+    :r ./Data/SubscriptionPlanDataSeeding.sql
 END
 ELSE
 BEGIN

@@ -24,19 +24,19 @@ builder.Services.AddDbContext<UsersContext>(options =>
 {
     // Use connection string from configuration - throw error if missing
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    
+
     if (string.IsNullOrWhiteSpace(connectionString))
     {
         throw new InvalidOperationException(
             "Database connection string 'DefaultConnection' is not configured. " +
             "Please ensure the connection string is set in appsettings.json, environment variables, or other configuration sources.");
     }
-    
+
     options.UseSqlServer(connectionString);
 });
 
 // Register BaseContext for data services
-builder.Services.AddScoped<HoneyHub.Core.DataService.Context.BaseContext>(provider => 
+builder.Services.AddScoped<HoneyHub.Core.DataService.Context.BaseContext>(provider =>
     provider.GetRequiredService<UsersContext>());
 
 // User domain services

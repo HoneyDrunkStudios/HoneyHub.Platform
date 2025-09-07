@@ -1,4 +1,4 @@
-using HoneyHub.Users.AppService.Models.Requests;
+using HoneyHub.Users.Api.Sdk.Requests;
 using HoneyHub.Users.DataService.DataServices.Subscriptions;
 using Microsoft.Extensions.Logging;
 
@@ -28,8 +28,6 @@ public class UserServiceValidator(
     {
         if (requestedPlanId.HasValue)
         {
-            _logger.LogDebug("Validating subscription plan ID: {SubscriptionPlanId}", requestedPlanId.Value);
-
             var plan = await _subscriptionPlanDataService.GetById(requestedPlanId.Value);
             if (plan is null)
             {
@@ -43,13 +41,11 @@ public class UserServiceValidator(
                 throw new ArgumentException($"Subscription plan with ID {requestedPlanId.Value} is inactive.");
             }
 
-            _logger.LogDebug("Subscription plan ID {SubscriptionPlanId} validated successfully", requestedPlanId.Value);
             return requestedPlanId.Value;
         }
 
         // Return default subscription plan ID (based on database default)
         const int defaultPlanId = 1;
-        _logger.LogDebug("Using default subscription plan ID: {DefaultPlanId}", defaultPlanId);
         return defaultPlanId;
     }
 
@@ -62,24 +58,12 @@ public class UserServiceValidator(
         ArgumentNullException.ThrowIfNull(request);
 
         var hasPassword = !string.IsNullOrWhiteSpace(request.Password);
-        var hasExternalProvider = !string.IsNullOrWhiteSpace(request.Provider) && !string.IsNullOrWhiteSpace(request.ProviderId);
 
-        _logger.LogDebug("Validating authentication method for admin user creation: hasPassword={HasPassword}, hasExternalProvider={HasExternalProvider}", 
-            hasPassword, hasExternalProvider);
-
-        if (!hasPassword && !hasExternalProvider)
+        if (!hasPassword)
         {
             _logger.LogWarning("Admin user creation failed: No authentication method specified");
-            throw new ArgumentException("Either password or external provider (Provider + ProviderId) must be specified for admin user creation.");
+            throw new ArgumentException("Password must be specified for admin user creation.");
         }
-
-        if (hasExternalProvider && (string.IsNullOrWhiteSpace(request.Provider) || string.IsNullOrWhiteSpace(request.ProviderId)))
-        {
-            _logger.LogWarning("Admin user creation failed: Incomplete external provider configuration");
-            throw new ArgumentException("Both Provider and ProviderId must be specified for external authentication.");
-        }
-
-        _logger.LogDebug("Authentication method validation passed for admin user creation");
     }
 
     /// <summary>
@@ -90,11 +74,9 @@ public class UserServiceValidator(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        _logger.LogDebug("Validating password user creation request for username: {UserName}", request.UserName);
-
         // Basic validation - data annotations handle most validation,
         // but we can add business-specific rules here
-        if (string.IsNullOrWhiteSpace(request.UserName?.Trim()))
+        if (string.IsNullOrWhiteSpace(request.Username?.Trim()))
         {
             throw new ArgumentException("Username cannot be empty or whitespace.");
         }
@@ -110,13 +92,11 @@ public class UserServiceValidator(
         }
 
         // Business rule: Username and email cannot be the same (case-insensitive)
-        if (string.Equals(request.UserName.Trim(), request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(request.Username.Trim(), request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogWarning("Password user creation validation failed: Username and email cannot be identical");
             throw new ArgumentException("Username and email address cannot be identical.");
         }
-
-        _logger.LogDebug("Password user creation request validation passed");
     }
 
     /// <summary>
@@ -127,11 +107,8 @@ public class UserServiceValidator(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        _logger.LogDebug("Validating external user creation request for username: {UserName}, provider: {Provider}", 
-            request.UserName, request.Provider);
-
         // Basic validation
-        if (string.IsNullOrWhiteSpace(request.UserName?.Trim()))
+        if (string.IsNullOrWhiteSpace(request.Username?.Trim()))
         {
             throw new ArgumentException("Username cannot be empty or whitespace.");
         }
@@ -141,32 +118,17 @@ public class UserServiceValidator(
             throw new ArgumentException("Email cannot be empty or whitespace.");
         }
 
-        if (string.IsNullOrWhiteSpace(request.Provider?.Trim()))
-        {
-            throw new ArgumentException("External provider name is required for external authentication.");
-        }
-
         if (string.IsNullOrWhiteSpace(request.ProviderId?.Trim()))
         {
             throw new ArgumentException("External provider ID is required for external authentication.");
         }
 
-        // Business rule: Validate known external providers
-        var supportedProviders = new[] { "Google", "Microsoft", "GitHub", "Apple", "Facebook" };
-        if (!supportedProviders.Contains(request.Provider.Trim(), StringComparer.OrdinalIgnoreCase))
-        {
-            _logger.LogWarning("Unsupported external provider: {Provider}", request.Provider);
-            throw new ArgumentException($"External provider '{request.Provider}' is not supported. Supported providers: {string.Join(", ", supportedProviders)}");
-        }
-
         // Business rule: Username and email cannot be the same (case-insensitive)
-        if (string.Equals(request.UserName.Trim(), request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(request.Username.Trim(), request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogWarning("External user creation validation failed: Username and email cannot be identical");
             throw new ArgumentException("Username and email address cannot be identical.");
         }
-
-        _logger.LogDebug("External user creation request validation passed");
     }
 
     /// <summary>
@@ -177,10 +139,8 @@ public class UserServiceValidator(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        _logger.LogDebug("Validating admin user creation request for username: {UserName}", request.UserName);
-
         // Basic validation
-        if (string.IsNullOrWhiteSpace(request.UserName?.Trim()))
+        if (string.IsNullOrWhiteSpace(request.Username?.Trim()))
         {
             throw new ArgumentException("Username cannot be empty or whitespace.");
         }
@@ -194,23 +154,10 @@ public class UserServiceValidator(
         ValidateAuthenticationMethod(request);
 
         // Business rule: Username and email cannot be the same (case-insensitive)
-        if (string.Equals(request.UserName.Trim(), request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(request.Username.Trim(), request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogWarning("Admin user creation validation failed: Username and email cannot be identical");
             throw new ArgumentException("Username and email address cannot be identical.");
         }
-
-        // Business rule: If external provider is specified, validate it's supported
-        if (!string.IsNullOrWhiteSpace(request.Provider))
-        {
-            var supportedProviders = new[] { "Google", "Microsoft", "GitHub", "Apple", "Facebook" };
-            if (!supportedProviders.Contains(request.Provider.Trim(), StringComparer.OrdinalIgnoreCase))
-            {
-                _logger.LogWarning("Unsupported external provider in admin creation: {Provider}", request.Provider);
-                throw new ArgumentException($"External provider '{request.Provider}' is not supported. Supported providers: {string.Join(", ", supportedProviders)}");
-            }
-        }
-
-        _logger.LogDebug("Admin user creation request validation passed");
     }
 }

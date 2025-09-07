@@ -1,4 +1,4 @@
-using HoneyHub.Users.AppService.Models.Requests;
+using HoneyHub.Users.Api.Sdk.Requests;
 using HoneyHub.Users.AppService.Services.SecurityServices;
 using HoneyHub.Users.AppService.Services.Validators;
 using HoneyHub.Users.DataService.DataServices.Users;
@@ -35,9 +35,6 @@ public class UserService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        _logger.LogInformation("Creating password user with username: {UserName}, email: {Email}", 
-            request.UserName, request.Email);
-
         // Validate request using dedicated validator
         _validator.ValidatePasswordUserRequest(request);
 
@@ -53,15 +50,15 @@ public class UserService(
         var user = new UserEntity
         {
             PublicId = Guid.NewGuid(),
-            UserName = request.UserName.Trim(),
-            NormalizedUserName = request.UserName.Trim().ToUpperInvariant(),
+            UserName = request.Username.Trim(),
+            NormalizedUserName = request.Username.Trim().ToUpperInvariant(),
             Email = request.Email.Trim(),
             NormalizedEmail = request.Email.Trim().ToUpperInvariant(),
             EmailConfirmed = false, // Always require email confirmation for password users
             PasswordHash = combinedHash,
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),
-            PhoneNumber = request.PhoneNumber?.Trim(),
+            PhoneNumber = null, // Not available in simplified request
             PhoneNumberConfirmed = false,
             TwoFactorEnabled = false,
             LockoutEnabled = true,
@@ -72,7 +69,7 @@ public class UserService(
         };
 
         // Set audit information
-        user.SetCreatedOn(request.CreatedBy);
+        user.SetCreatedOn(request.Username);
 
         // Persist user
         await _userDataService.Insert(user);
@@ -83,11 +80,9 @@ public class UserService(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while creating password user with username: {UserName}", request.UserName);
+            _logger.LogError(ex, "Error occurred while creating password user with username: {Username}", request.Username);
             throw; // Rethrow to let higher layers handle it
         }
-
-        _logger.LogInformation("Successfully created password user with PublicId: {PublicId}", user.PublicId);
 
         return user.PublicId;
     }
@@ -100,9 +95,6 @@ public class UserService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        _logger.LogInformation("Creating external user with username: {UserName}, email: {Email}, provider: {Provider}", 
-            request.UserName, request.Email, request.Provider);
-
         // Validate request using dedicated validator
         _validator.ValidateExternalUserRequest(request);
 
@@ -113,15 +105,15 @@ public class UserService(
         var user = new UserEntity
         {
             PublicId = Guid.NewGuid(),
-            UserName = request.UserName.Trim(),
-            NormalizedUserName = request.UserName.Trim().ToUpperInvariant(),
+            UserName = request.Username.Trim(),
+            NormalizedUserName = request.Username.Trim().ToUpperInvariant(),
             Email = request.Email.Trim(),
             NormalizedEmail = request.Email.Trim().ToUpperInvariant(),
-            EmailConfirmed = request.EmailConfirmed, // Trust external provider verification
+            EmailConfirmed = true, // Trust external provider verification by default
             PasswordHash = null, // No password for external users
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),
-            PhoneNumber = request.PhoneNumber?.Trim(),
+            PhoneNumber = null, // Not available in simplified request
             PhoneNumberConfirmed = false,
             TwoFactorEnabled = false,
             LockoutEnabled = true,
@@ -132,14 +124,14 @@ public class UserService(
         };
 
         // Set audit information
-        user.SetCreatedOn(request.CreatedBy);
+        user.SetCreatedOn(request.Username);
 
         // Create external login association
         var userLogin = new UserLoginEntity
         {
-            LoginProvider = request.Provider.Trim(),
+            LoginProvider = request.Provider.ToString(),
             ProviderKey = request.ProviderId.Trim(),
-            ProviderDisplayName = request.ProviderDisplayName?.Trim(),
+            ProviderDisplayName = request.Provider.ToString(), // Use enum name as display name
             UserId = user.Id, // Will be set after user is saved
             User = user
         };
@@ -149,9 +141,6 @@ public class UserService(
         // Persist user with external login
         await _userDataService.Insert(user);
         await _userDataService.SaveChangesAsync(cancellationToken);
-
-        _logger.LogInformation("Successfully created external user with PublicId: {PublicId}, Provider: {Provider}", 
-            user.PublicId, request.Provider);
 
         return user.PublicId;
     }
@@ -164,9 +153,6 @@ public class UserService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        _logger.LogInformation("Admin creating user with username: {UserName}, email: {Email}, createdBy: {CreatedBy}", 
-            request.UserName, request.Email, request.CreatedBy);
-
         // Validate request using dedicated validator
         _validator.ValidateAdminUserRequest(request);
 
@@ -175,7 +161,6 @@ public class UserService(
 
         // Determine authentication configuration
         var hasPassword = !string.IsNullOrWhiteSpace(request.Password);
-        var hasExternalProvider = !string.IsNullOrWhiteSpace(request.Provider) && !string.IsNullOrWhiteSpace(request.ProviderId);
 
         // Generate password hash if password is provided
         string? passwordHash = null;
@@ -190,55 +175,31 @@ public class UserService(
         var user = new UserEntity
         {
             PublicId = Guid.NewGuid(),
-            UserName = request.UserName.Trim(),
-            NormalizedUserName = request.UserName.Trim().ToUpperInvariant(),
+            UserName = request.Username.Trim(),
+            NormalizedUserName = request.Username.Trim().ToUpperInvariant(),
             Email = request.Email.Trim(),
             NormalizedEmail = request.Email.Trim().ToUpperInvariant(),
-            EmailConfirmed = request.EmailConfirmed,
+            EmailConfirmed = true, // Admin created users are verified by default
             PasswordHash = passwordHash,
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),
-            PhoneNumber = request.PhoneNumber?.Trim(),
-            PhoneNumberConfirmed = request.PhoneNumberConfirmed,
-            TwoFactorEnabled = request.TwoFactorEnabled,
-            LockoutEnabled = request.LockoutEnabled,
+            PhoneNumber = null, // Not available in simplified request
+            PhoneNumberConfirmed = false,
+            TwoFactorEnabled = false,
+            LockoutEnabled = true,
             AccessFailedCount = 0,
-            IsActive = request.IsActive,
+            IsActive = true, // Admin created users are active by default
             IsDeleted = false,
             SubscriptionPlanId = subscriptionPlanId
         };
 
         // Set audit information
-        user.SetCreatedOn(request.CreatedBy);
-
-        // Add external login if specified
-        if (hasExternalProvider)
-        {
-            var userLogin = new UserLoginEntity
-            {
-                LoginProvider = request.Provider!.Trim(),
-                ProviderKey = request.ProviderId!.Trim(),
-                ProviderDisplayName = request.ProviderDisplayName?.Trim(),
-                UserId = user.Id,
-                User = user
-            };
-
-            user.Logins.Add(userLogin);
-        }
+        user.SetCreatedOn(request.Username);
 
         // Persist user
         await _userDataService.Insert(user);
         await _userDataService.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Successfully admin created user with PublicId: {PublicId}, hasPassword: {HasPassword}, hasExternalProvider: {HasExternalProvider}", 
-            user.PublicId, hasPassword, hasExternalProvider);
-
         return user.PublicId;
     }
-
-    /// <summary>
-    /// Legacy method - kept for backward compatibility.
-    /// </summary>
-    [Obsolete("Use CreatePasswordUserAsync, CreateExternalUserAsync, or AdminCreateUserAsync instead")]
-    public Task CreateUser() => Task.CompletedTask;
 }

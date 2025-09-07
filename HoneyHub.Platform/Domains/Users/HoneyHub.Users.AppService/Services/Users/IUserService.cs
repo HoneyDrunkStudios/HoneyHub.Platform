@@ -1,4 +1,4 @@
-using HoneyHub.Users.AppService.Models.Requests;
+using HoneyHub.Users.Api.Sdk.Requests;
 
 namespace HoneyHub.Users.AppService.Services.Users;
 
@@ -34,11 +34,4 @@ public interface IUserService
     /// <param name="cancellationToken">Cancellation token for the async operation</param>
     /// <returns>The public ID of the created user</returns>
     Task<Guid> AdminCreateUserAsync(AdminCreateUserRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Legacy method - will be removed in future versions.
-    /// Use specific create methods instead.
-    /// </summary>
-    [Obsolete("Use CreatePasswordUserAsync, CreateExternalUserAsync, or AdminCreateUserAsync instead")]
-    Task CreateUser();
 }

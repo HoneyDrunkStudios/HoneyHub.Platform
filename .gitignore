@@ -416,3 +416,13 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Ignore environment-specific appsettings except the base one
+appsettings.*.json
+!appsettings.json
+
+# Ignore user secrets
+secrets.json
+*.secrets.json
+**/secrets.json
+

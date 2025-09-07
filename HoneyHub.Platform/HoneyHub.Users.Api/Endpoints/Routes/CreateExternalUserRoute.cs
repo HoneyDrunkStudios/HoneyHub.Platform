@@ -1,5 +1,5 @@
 using HoneyHub.Users.Api.Endpoints.Shared;
-using HoneyHub.Users.AppService.Models.Requests;
+using HoneyHub.Users.Api.Sdk.Requests;
 using HoneyHub.Users.AppService.Services.Users;
 using Microsoft.AspNetCore.Mvc;
 
@@ -40,7 +40,7 @@ public static class CreateExternalUserRoute
             if (!EndpointResponseHelpers.ValidateRequest(request, out var validationErrors))
             {
                 return EndpointResponseHelpers.CreateValidationProblemResponse(
-                    validationErrors, 
+                    validationErrors,
                     "One or more validation errors occurred during external user creation.");
             }
 

@@ -1,5 +1,5 @@
-using HoneyHub.Users.AppService.Models.Requests;
-using HoneyHub.Users.DataService.Entities.Subscriptions;
+
+using HoneyHub.Users.Api.Sdk.Requests;
 
 namespace HoneyHub.Users.AppService.Services.Validators;
 

@@ -1,6 +1,6 @@
 using HoneyHub.Core.DataService.Entities;
-using HoneyHub.Users.DataService.Entities.Subscriptions;
 using HoneyHub.Users.DataService.Entities.Identity;
+using HoneyHub.Users.DataService.Entities.Subscriptions;
 
 namespace HoneyHub.Users.DataService.Entities.Users;
 
