@@ -102,4 +102,4 @@ stages:
                 /p:BlockOnPossibleDataLoss=true
                 /p:DropObjectsNotInSource=false
                 /p:AllowIncompatiblePlatform=false
-
+                /v:SeedData=1

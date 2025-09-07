@@ -1,61 +1,36 @@
 ﻿-- =================================================================
--- Indexes for Performance Optimization (Idempotent)
+-- Indexes for Performance Optimization
 -- =================================================================
 
--- Index for email lookups (authentication)
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Users_User_Email_Active' AND object_id = OBJECT_ID('[dbo].[User]'))
-BEGIN
-    CREATE NONCLUSTERED INDEX IX_Users_User_Email_Active
-    ON [dbo].[User] ([Email])
-    WHERE [IsActive] = 1 AND [IsDeleted] = 0;
-    
-    PRINT 'Index IX_Users_User_Email_Active created successfully.';
-END
-ELSE
-BEGIN
-    PRINT 'Index IX_Users_User_Email_Active already exists.';
-END
+-- Index for email lookups (authentication) - using NormalizedEmail for case-insensitive lookups
+CREATE NONCLUSTERED INDEX [IX_User_NormalizedEmail_Active]
+ON [dbo].[User] ([NormalizedEmail])
+WHERE [IsActive] = 1 AND [IsDeleted] = 0;
+GO
 
--- Index for username lookups
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Users_User_Username_Active' AND object_id = OBJECT_ID('[dbo].[User]'))
-BEGIN
-    CREATE NONCLUSTERED INDEX IX_Users_User_Username_Active
-    ON [dbo].[User] ([Username])
-    WHERE [IsActive] = 1 AND [IsDeleted] = 0;
-    
-    PRINT 'Index IX_Users_User_Username_Active created successfully.';
-END
-ELSE
-BEGIN
-    PRINT 'Index IX_Users_User_Username_Active already exists.';
-END
+-- Index for username lookups - using NormalizedUserName for case-insensitive lookups
+CREATE NONCLUSTERED INDEX [IX_User_NormalizedUserName_Active]
+ON [dbo].[User] ([NormalizedUserName])
+WHERE [IsActive] = 1 AND [IsDeleted] = 0;
+GO
 
--- Index for provider authentication
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Users_User_Provider_ProviderId' AND object_id = OBJECT_ID('[dbo].[User]'))
-BEGIN
-    CREATE NONCLUSTERED INDEX IX_Users_User_Provider_ProviderId
-    ON [dbo].[User] ([Provider], [ProviderId])
-    WHERE [Provider] IS NOT NULL AND [IsActive] = 1 AND [IsDeleted] = 0;
-    
-    PRINT 'Index IX_Users_User_Provider_ProviderId created successfully.';
-END
-ELSE
-BEGIN
-    PRINT 'Index IX_Users_User_Provider_ProviderId already exists.';
-END
+-- Index for public ID lookups (API queries)
+CREATE NONCLUSTERED INDEX [IX_User_PublicId_Active]
+ON [dbo].[User] ([PublicId])
+WHERE [IsActive] = 1 AND [IsDeleted] = 0;
+GO
 
--- Index for subscription plan queries
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Users_User_SubscriptionPlanId' AND object_id = OBJECT_ID('[dbo].[User]'))
-BEGIN
-    CREATE NONCLUSTERED INDEX IX_Users_User_SubscriptionPlanId
-    ON [dbo].[User] ([SubscriptionPlanId])
-    INCLUDE ([PublicId], [Username], [Email], [IsActive]);
-    
-    PRINT 'Index IX_Users_User_SubscriptionPlanId created successfully.';
-END
-ELSE
-BEGIN
-    PRINT 'Index IX_Users_User_SubscriptionPlanId already exists.';
-END
+-- Index for last login tracking and analytics
+CREATE NONCLUSTERED INDEX [IX_User_LastLoginAt]
+ON [dbo].[User] ([LastLoginAt])
+WHERE [LastLoginAt] IS NOT NULL AND [IsActive] = 1 AND [IsDeleted] = 0;
+GO
 
-PRINT 'User indexes script completed successfully.';
+-- Index for subscription plan queries with filtered coverage for active users
+-- Note: Base IX_User_SubscriptionPlanId already exists from User.sql
+-- This provides additional filtered coverage with useful INCLUDE columns
+CREATE NONCLUSTERED INDEX [IX_User_SubscriptionPlanId_Active]
+ON [dbo].[User] ([SubscriptionPlanId])
+INCLUDE ([PublicId], [UserName], [Email], [IsActive])
+WHERE [IsActive] = 1 AND [IsDeleted] = 0;
+GO
