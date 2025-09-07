@@ -163,29 +163,62 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          # Find test projects tracked in git
+          mapfile -t test_projects < <(git ls-files '**/*[Tt]ests/*.csproj' '**/*.Tests.csproj' | sort || true)
+          if [[ ${#test_projects[@]} -eq 0 ]]; then
+            echo "No test projects found; skipping."
+            exit 0
+          fi
+
           has_error=0
-          while IFS= read -r file; do
-            while IFS= read -r line; do
-              name=$(echo "$line" | sed -n 's/.*public void \([^(]*\).*/\1/p')
-              if [[ -n "$name" && ! "$name" =~ ^[A-Za-z][A-Za-z0-9]*(_[A-Za-z][A-Za-z0-9]*){2,}$ ]]; then
-                echo "::error file=$file::Test '$name' violates Method_Condition_Expected"
-                has_error=1
-              fi
-            done < <(grep -n "public void.*(" "$file" || true)
-          done < <(find . -name "*.cs" -path "*/Tests/*" -print0 | xargs -0 -r grep -l "\[Fact" || true)
+          for proj in "${test_projects[@]}"; do
+            dir="$(dirname "$proj")"
+
+            # Only scan tracked .cs files inside the test project folder
+            while IFS= read -r -d '' file; do
+              # Pull public void method names (typical xUnit style)
+              # and check they match Method_Condition_Expected (at least 3 parts)
+              while IFS= read -r line; do
+                name=$(sed -n 's/.*public[[:space:]]\+void[[:space:]]\+\([^( ]*\).*/\1/p' <<< "$line")
+                if [[ -n "${name:-}" && ! "$name" =~ ^[A-Za-z][A-Za-z0-9]*(_[A-Za-z][A-Za-z0-9]*){2,}$ ]]; then
+                  echo "::error file=$file::Test '$name' violates Method_Condition_Expected"
+                  has_error=1
+                fi
+              done < <(grep -n "public[[:space:]]\+void[[:space:]]\+[^( ]*\s*(" "$file" || true)
+            done < <(git ls-files -z "$dir/**/*.cs")
+          done
+
           exit $has_error
 
       - name: Enforce DisplayName on [Fact]/[Theory]
         shell: bash
         run: |
           set -euo pipefail
+
+          # Find test projects tracked in git
+          mapfile -t test_projects < <(git ls-files '**/*[Tt]ests/*.csproj' '**/*.Tests.csproj' | sort || true)
+          if [[ ${#test_projects[@]} -eq 0 ]]; then
+            echo "No test projects found; skipping."
+            exit 0
+          fi
+
           has_error=0
-          while IFS= read -r file; do
-            fact=$(grep -cE "\[Fact|\[Theory" "$file" || echo 0)
-            display=$(grep -c "DisplayName\\s*=" "$file" || echo 0)
-            if [ "$fact" -ne "$display" ]; then
-              echo "::error file=$file::$fact test(s) but $display DisplayName attribute(s)"
-              has_error=1
-            fi
-          done < <(find . -name "*.cs" -path "*/Tests/*" -print0 | xargs -0 -r grep -lE "\[Fact|\[Theory" || true)
+
+          for proj in "${test_projects[@]}"; do
+            dir="$(dirname "$proj")"
+
+            # Only scan tracked .cs files within that test project
+            while IFS= read -r -d '' file; do
+              # Count test attributes and DisplayName usage
+              fact=$(grep -cE '\[(Fact|Theory)\b' "$file" || true)
+              display=$(grep -cE 'DisplayName\s*=' "$file" || true)
+
+              if [[ "$fact" -ne "$display" && "$fact" -gt 0 ]]; then
+                echo "::error file=$file::$fact test(s) but $display DisplayName attribute(s)"
+                has_error=1
+              fi
+            done < <(git ls-files -z "$dir/**/*.cs")
+          done
+
           exit $has_error
