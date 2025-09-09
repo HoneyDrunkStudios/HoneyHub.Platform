@@ -73,8 +73,9 @@ builder.WebHost.UseSentry(o =>
 {
     o.Dsn = builder.Configuration["Sentry:Dsn"];
     o.Environment = builder.Environment.EnvironmentName;
-    o.TracesSampleRate = builder.Configuration.GetValue("Sentry:TracesSampleRate", 1.0);
-    o.ProfilesSampleRate = builder.Configuration.GetValue("Sentry:ProfilesSampleRate", 1.0);
+    var isDevelopment = builder.Environment.IsDevelopment();
+    o.TracesSampleRate = builder.Configuration.GetValue("Sentry:TracesSampleRate", isDevelopment ? 1.0 : 0.2);
+    o.ProfilesSampleRate = builder.Configuration.GetValue("Sentry:ProfilesSampleRate", isDevelopment ? 1.0 : 0.1);
     o.SendDefaultPii = false;
 });
 
