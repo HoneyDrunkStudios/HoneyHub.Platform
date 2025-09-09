@@ -1,6 +1,10 @@
+using Azure.Core;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using HoneyHub.Platform.ServiceDefaults;
 using HoneyHub.Users.Api.Endpoints;
 using HoneyHub.Users.Api.Extensions;
+using HoneyHub.Users.Api.Infrastructure;
 using HoneyHub.Users.AppService.Mapping;
 using HoneyHub.Users.AppService.Services.SecurityServices;
 using HoneyHub.Users.AppService.Services.Users;
@@ -13,47 +17,66 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Key Vault config provider (CLI in Dev, Default in Azure)
+var kvName = builder.Configuration["KeyVault:Name"];
+var orgPrefix = builder.Configuration["KeyVault:OrgPrefix"] ?? "Org";
+var service = builder.Configuration["KeyVault:Service"] ?? "UsersApi";
+var envName = builder.Environment.EnvironmentName;
+
+if (!string.IsNullOrWhiteSpace(kvName))
+{
+    TokenCredential cred = builder.Environment.IsDevelopment()
+        ? new AzureCliCredential()
+        : new DefaultAzureCredential();
+
+    var kvUri = new Uri($"https://{kvName}.vault.azure.net/");
+    var client = new SecretClient(kvUri, cred);
+    builder.Configuration.AddAzureKeyVault(
+        client,
+        new DualPrefixKeyVaultSecretManager(orgPrefix, $"{service}-{envName}")
+    );
+}
+
 builder.AddServiceDefaults();
 
 builder.Services.AddOpenApi();
-
-// NEW: add health checks service
 builder.Services.AddHealthChecks();
 
-// Database context
 builder.Services.AddDbContext<UsersContext>(options =>
 {
-    // Use connection string from configuration - throw error if missing
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
     if (string.IsNullOrWhiteSpace(connectionString))
     {
         throw new InvalidOperationException(
             "Database connection string 'DefaultConnection' is not configured. " +
-            "Please ensure the connection string is set in appsettings.json, environment variables, or other configuration sources.");
+            "Please ensure the connection string is set via Key Vault, appsettings, or environment variables.");
     }
-
     options.UseSqlServer(connectionString);
 });
 
-// Register BaseContext for data services
 builder.Services.AddScoped<HoneyHub.Core.DataService.Context.BaseContext>(provider =>
     provider.GetRequiredService<UsersContext>());
 
-// User domain services
 builder.Services.AddUsersMappings();
 builder.Services.AddScoped<IUserService, UserService>();
 
-// Validation services
-builder.Services.AddApiValidation(); // FluentValidation for API requests
-builder.Services.AddScoped<IUserServiceValidator, UserServiceValidator>(); // Business rules
+builder.Services.AddApiValidation();
+builder.Services.AddScoped<IUserServiceValidator, UserServiceValidator>();
 
-// Data services
 builder.Services.AddScoped<IUserDataService, UserDataService>();
 builder.Services.AddScoped<ISubscriptionPlanDataService, SubscriptionPlanDataService>();
 
-// Security services
 builder.Services.AddPasswordServices(builder.Configuration);
+
+// Sentry
+builder.WebHost.UseSentry(o =>
+{
+    o.Dsn = builder.Configuration["Sentry:Dsn"];
+    o.Environment = builder.Environment.EnvironmentName;
+    o.TracesSampleRate = builder.Configuration.GetValue("Sentry:TracesSampleRate", 1.0);
+    o.ProfilesSampleRate = builder.Configuration.GetValue("Sentry:ProfilesSampleRate", 1.0);
+    o.SendDefaultPii = false;
+});
 
 var app = builder.Build();
 
