@@ -426,3 +426,5 @@ secrets.json
 *.secrets.json
 **/secrets.json
 
+# Local database files
+dev/localdb/.env
