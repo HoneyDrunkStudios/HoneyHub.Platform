@@ -80,6 +80,7 @@
     <Build Include="Scripts\Indexes\SubscriptionPlanIndexes.sql" />
     <Build Include="Scripts\Indexes\UserIndexes.sql" />
     <Build Include="Scripts\Constraints\UserConstraints.sql" />
+    <Build Include="Tables\OutboxMessage.sql" />
   </ItemGroup>
   <!-- Post-deployment entry -->
   <ItemGroup>
@@ -90,6 +91,8 @@
   <!-- Optional: visible but not compiled; referenced via :r in Post-Deployment.sql -->
   <ItemGroup>
     <None Include="Scripts\Data\SubscriptionPlanDataSeeding.sql" />
+    <None Include="Scripts\Constraints\OutboxMessageConstraints.sql" />
+    <None Include="Scripts\Indexes\OutboxMessageIndexes.sql" />
   </ItemGroup>
   <!-- SQLCMD variable -->
   <ItemGroup>

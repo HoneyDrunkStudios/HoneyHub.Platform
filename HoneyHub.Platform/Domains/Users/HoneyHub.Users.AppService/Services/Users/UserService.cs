@@ -1,6 +1,9 @@
+using HoneyDrunk.Messaging.Domain.ValueObjects;
+using HoneyHub.Outbox.Abstractions;
 using HoneyHub.Users.Api.Sdk.Requests;
 using HoneyHub.Users.AppService.Services.SecurityServices;
 using HoneyHub.Users.AppService.Services.Validators.Users;
+using HoneyHub.Users.DataService.Context;
 using HoneyHub.Users.DataService.DataServices.Users;
 using HoneyHub.Users.DataService.Entities.Identity;
 using HoneyHub.Users.DataService.Entities.Users;
@@ -9,44 +12,49 @@ using Microsoft.Extensions.Logging;
 namespace HoneyHub.Users.AppService.Services.Users;
 
 /// <summary>
-/// Application service for user management operations.
-/// Orchestrates user creation workflows while maintaining domain boundaries and business rules.
+/// Application service that orchestrates user workflows and persists integration events via the transactional outbox.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of UserService with required dependencies.
-/// Follows Dependency Inversion Principle by depending on abstractions.
+/// Uses a single database transaction to save domain changes and enqueue outbox records.
 /// </remarks>
+/// <param name="db">Users database context for transactions.</param>
+/// <param name="outbox">Outbox store used to enqueue integration events.</param>
+/// <param name="userDataService">Domain data service for user persistence.</param>
+/// <param name="passwordService">Password hashing and salt generation service.</param>
+/// <param name="validator">Validator for user creation requests and subscription plans.</param>
+/// <param name="logger">Logger.</param>
 public class UserService(
+    UsersContext db,
+    IOutboxStore outbox,
     IUserDataService userDataService,
     IPasswordService passwordService,
     IUserServiceValidator validator,
     ILogger<UserService> logger) : IUserService
 {
+    private readonly UsersContext _db = db ?? throw new ArgumentNullException(nameof(db));
+    private readonly IOutboxStore _outbox = outbox ?? throw new ArgumentNullException(nameof(outbox));
     private readonly IUserDataService _userDataService = userDataService ?? throw new ArgumentNullException(nameof(userDataService));
     private readonly IPasswordService _passwordService = passwordService ?? throw new ArgumentNullException(nameof(passwordService));
     private readonly IUserServiceValidator _validator = validator ?? throw new ArgumentNullException(nameof(validator));
     private readonly ILogger<UserService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
-    /// Creates a new user account with password-based authentication.
-    /// Implements secure password hashing and enforces business rules for password users.
+    /// Creates a new user with password-based authentication and enqueues a <see cref="MessageTypes.Users.UserCreated"/> outbox event.
     /// </summary>
+    /// <param name="request">The request containing username, email, password, and subscription plan.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The public identifier of the newly created user.</returns>
     public async Task<Guid> CreatePasswordUserAsync(CreatePasswordUserRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Validate request using dedicated validator
         _validator.ValidatePasswordUserRequest(request);
-
-        // Validate subscription plan
         var subscriptionPlanId = await _validator.ValidateAndGetSubscriptionPlanIdAsync(request.SubscriptionPlanId, cancellationToken);
 
-        // Generate secure password hash
         var salt = _passwordService.CreateSalt();
         var passwordHash = _passwordService.HashPassword(request.Password, salt);
-        var combinedHash = $"{salt}:{passwordHash}"; // Store salt and hash together for easier management
+        var combinedHash = $"{salt}:{passwordHash}";
 
-        // Create user entity with password authentication
         var user = new UserEntity
         {
             PublicId = Guid.NewGuid(),
@@ -54,11 +62,11 @@ public class UserService(
             NormalizedUserName = request.Username.Trim().ToUpperInvariant(),
             Email = request.Email.Trim(),
             NormalizedEmail = request.Email.Trim().ToUpperInvariant(),
-            EmailConfirmed = false, // Always require email confirmation for password users
+            EmailConfirmed = false,
             PasswordHash = combinedHash,
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),
-            PhoneNumber = null, // Not available in simplified request
+            PhoneNumber = null,
             PhoneNumberConfirmed = false,
             TwoFactorEnabled = false,
             LockoutEnabled = true,
@@ -67,41 +75,54 @@ public class UserService(
             IsDeleted = false,
             SubscriptionPlanId = subscriptionPlanId
         };
-
-        // Set audit information
         user.SetCreatedOn(request.Username);
 
-        // Persist user
+        await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
         await _userDataService.Insert(user);
+
+        await _outbox.EnqueueAsync(
+            eventType: MessageTypes.Users.UserCreated,
+            aggregateType: "User",
+            aggregatePublicId: user.PublicId,
+            payload: new
+            {
+                userId = user.PublicId,
+                email = user.Email,
+                username = user.UserName,
+                createdAt = DateTime.UtcNow
+            },
+            ct: cancellationToken
+        );
 
         try
         {
             await _userDataService.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while creating password user with username: {Username}", request.Username);
-            throw; // Rethrow to let higher layers handle it
+            _logger.LogError(ex, "Error creating password user: {Username}", request.Username);
+            await tx.RollbackAsync(cancellationToken);
+            throw;
         }
 
         return user.PublicId;
     }
 
     /// <summary>
-    /// Creates a new user account with external authentication provider.
-    /// Associates the user with an external login provider for authentication.
+    /// Creates a new user associated with an external authentication provider and enqueues a <see cref="MessageTypes.Users.UserCreated"/> outbox event.
     /// </summary>
+    /// <param name="request">The request containing provider details, username, email, and subscription plan.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The public identifier of the newly created user.</returns>
     public async Task<Guid> CreateExternalUserAsync(CreateExternalUserRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Validate request using dedicated validator
         _validator.ValidateExternalUserRequest(request);
-
-        // Validate subscription plan
         var subscriptionPlanId = await _validator.ValidateAndGetSubscriptionPlanIdAsync(request.SubscriptionPlanId, cancellationToken);
 
-        // Create user entity without password (external authentication)
         var user = new UserEntity
         {
             PublicId = Guid.NewGuid(),
@@ -109,11 +130,11 @@ public class UserService(
             NormalizedUserName = request.Username.Trim().ToUpperInvariant(),
             Email = request.Email.Trim(),
             NormalizedEmail = request.Email.Trim().ToUpperInvariant(),
-            EmailConfirmed = true, // Trust external provider verification by default
-            PasswordHash = null, // No password for external users
+            EmailConfirmed = true,
+            PasswordHash = null,
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),
-            PhoneNumber = null, // Not available in simplified request
+            PhoneNumber = null,
             PhoneNumberConfirmed = false,
             TwoFactorEnabled = false,
             LockoutEnabled = true,
@@ -122,56 +143,73 @@ public class UserService(
             IsDeleted = false,
             SubscriptionPlanId = subscriptionPlanId
         };
-
-        // Set audit information
         user.SetCreatedOn(request.Username);
 
-        // Create external login association
         var userLogin = new UserLoginEntity
         {
             LoginProvider = request.Provider.ToString(),
             ProviderKey = request.ProviderId.Trim(),
-            ProviderDisplayName = request.Provider.ToString(), // Use enum name as display name
-            UserId = user.Id, // Will be set after user is saved
+            ProviderDisplayName = request.Provider.ToString(),
             User = user
         };
-
         user.Logins.Add(userLogin);
 
-        // Persist user with external login
+        await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
         await _userDataService.Insert(user);
-        await _userDataService.SaveChangesAsync(cancellationToken);
+
+        await _outbox.EnqueueAsync(
+            eventType: MessageTypes.Users.UserCreated,
+            aggregateType: "User",
+            aggregatePublicId: user.PublicId,
+            payload: new
+            {
+                userId = user.PublicId,
+                email = user.Email,
+                username = user.UserName,
+                provider = request.Provider.ToString(),
+                providerId = request.ProviderId,
+                createdAt = DateTime.UtcNow
+            },
+            ct: cancellationToken
+        );
+
+        try
+        {
+            await _userDataService.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating external user: {Username}", request.Username);
+            await tx.RollbackAsync(cancellationToken);
+            throw;
+        }
 
         return user.PublicId;
     }
 
     /// <summary>
-    /// Creates a new user account as an administrator with elevated configuration options.
-    /// Allows setting specific flags and bypassing standard validations.
+    /// Creates a new user via administrative action and enqueues a <see cref="MessageTypes.Users.UserCreated"/> outbox event.
     /// </summary>
+    /// <param name="request">The request containing user details, optional password, and subscription plan.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The public identifier of the newly created user.</returns>
     public async Task<Guid> AdminCreateUserAsync(AdminCreateUserRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Validate request using dedicated validator
         _validator.ValidateAdminUserRequest(request);
-
-        // Validate subscription plan
         var subscriptionPlanId = await _validator.ValidateAndGetSubscriptionPlanIdAsync(request.SubscriptionPlanId, cancellationToken);
 
-        // Determine authentication configuration
-        var hasPassword = !string.IsNullOrWhiteSpace(request.Password);
-
-        // Generate password hash if password is provided
         string? passwordHash = null;
-        if (hasPassword)
+        if (!string.IsNullOrWhiteSpace(request.Password))
         {
             var salt = _passwordService.CreateSalt();
             var hash = _passwordService.HashPassword(request.Password!, salt);
             passwordHash = $"{salt}:{hash}";
         }
 
-        // Create user entity with administrative settings
         var user = new UserEntity
         {
             PublicId = Guid.NewGuid(),
@@ -179,26 +217,51 @@ public class UserService(
             NormalizedUserName = request.Username.Trim().ToUpperInvariant(),
             Email = request.Email.Trim(),
             NormalizedEmail = request.Email.Trim().ToUpperInvariant(),
-            EmailConfirmed = true, // Admin created users are verified by default
+            EmailConfirmed = true,
             PasswordHash = passwordHash,
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),
-            PhoneNumber = null, // Not available in simplified request
+            PhoneNumber = null,
             PhoneNumberConfirmed = false,
             TwoFactorEnabled = false,
             LockoutEnabled = true,
             AccessFailedCount = 0,
-            IsActive = true, // Admin created users are active by default
+            IsActive = true,
             IsDeleted = false,
             SubscriptionPlanId = subscriptionPlanId
         };
-
-        // Set audit information
         user.SetCreatedOn(request.Username);
 
-        // Persist user
+        await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
         await _userDataService.Insert(user);
-        await _userDataService.SaveChangesAsync(cancellationToken);
+
+        await _outbox.EnqueueAsync(
+            eventType: MessageTypes.Users.UserCreated,
+            aggregateType: "User",
+            aggregatePublicId: user.PublicId,
+            payload: new
+            {
+                userId = user.PublicId,
+                email = user.Email,
+                username = user.UserName,
+                hasPassword = passwordHash is not null,
+                createdAt = DateTime.UtcNow
+            },
+            ct: cancellationToken
+        );
+
+        try
+        {
+            await _userDataService.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error provisioning user (admin): {Username}", request.Username);
+            await tx.RollbackAsync(cancellationToken);
+            throw;
+        }
 
         return user.PublicId;
     }

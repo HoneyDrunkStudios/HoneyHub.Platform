@@ -5,18 +5,13 @@ using HoneyHub.Platform.ServiceDefaults;
 using HoneyHub.Users.Api.Endpoints;
 using HoneyHub.Users.Api.Extensions;
 using HoneyHub.Users.Api.Infrastructure;
-using HoneyHub.Users.AppService.Mapping;
-using HoneyHub.Users.AppService.Services.SecurityServices;
-using HoneyHub.Users.AppService.Services.Users;
-using HoneyHub.Users.AppService.Services.Validators.Users;
+using HoneyHub.Users.AppService.Extensions;
 using HoneyHub.Users.DataService.Context;
-using HoneyHub.Users.DataService.DataServices.Subscriptions;
-using HoneyHub.Users.DataService.DataServices.Users;
+using HoneyHub.Users.DataService.Extensions;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Key Vault
 var kvName = builder.Configuration["KeyVault:Name"];
 var orgPrefix = builder.Configuration["KeyVault:OrgPrefix"] ?? "Org";
 var service = builder.Configuration["KeyVault:Service"] ?? "UsersApi";
@@ -36,7 +31,6 @@ if (!string.IsNullOrWhiteSpace(kvName))
     );
 }
 
-// Dev overrides AFTER Key Vault (uses appsettings.Development.json/env)
 builder.AddDevConfigOverrides();
 
 builder.AddServiceDefaults();
@@ -44,24 +38,12 @@ builder.AddServiceDefaults();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
-// DbContext wired for dev/local + container swap
 builder.Services.AddUsersDbWithLocalDev(builder.Configuration, builder.Environment);
+builder.Services.AddScoped<HoneyHub.Core.DataService.Context.BaseContext>(sp => sp.GetRequiredService<UsersContext>());
 
-builder.Services.AddScoped<HoneyHub.Core.DataService.Context.BaseContext>(provider =>
-    provider.GetRequiredService<UsersContext>());
+builder.Services.AddUsersDataServices();
+builder.Services.AddUsersAppServices(builder.Configuration);
 
-builder.Services.AddUsersMappings();
-builder.Services.AddScoped<IUserService, UserService>();
-
-builder.Services.AddApiValidation();
-builder.Services.AddScoped<IUserServiceValidator, UserServiceValidator>();
-
-builder.Services.AddScoped<IUserDataService, UserDataService>();
-builder.Services.AddScoped<ISubscriptionPlanDataService, SubscriptionPlanDataService>();
-
-builder.Services.AddPasswordServices(builder.Configuration);
-
-// Sentry
 builder.WebHost.UseSentry(o =>
 {
     o.Dsn = builder.Configuration["Sentry:Dsn"];
@@ -92,7 +74,6 @@ if (!runningInContainer)
     app.UseHttpsRedirection();
 }
 
-// dev-only fail-fast DB connectivity
 await app.EnsureDbConnectivityAsync();
 
 app.MapUsersEndpoints();
