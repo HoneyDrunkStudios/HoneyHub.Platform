@@ -44,6 +44,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{702919F4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalDbDeployer", "Tools\LocalDbDeployer\LocalDbDeployer.csproj", "{EB99B462-0DFA-4F88-80CA-31CFD72B39DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHub.Outbox", "Shared\HoneyHub.Outbox\HoneyHub.Outbox.csproj", "{5EA52F9E-8832-46F0-918E-2118DF60C176}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,6 +86,10 @@ Global
 		{EB99B462-0DFA-4F88-80CA-31CFD72B39DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB99B462-0DFA-4F88-80CA-31CFD72B39DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB99B462-0DFA-4F88-80CA-31CFD72B39DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EA52F9E-8832-46F0-918E-2118DF60C176}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EA52F9E-8832-46F0-918E-2118DF60C176}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EA52F9E-8832-46F0-918E-2118DF60C176}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EA52F9E-8832-46F0-918E-2118DF60C176}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -101,6 +107,7 @@ Global
 		{41EA3C2E-B4A7-4857-973F-A720F98A8AA6} = {9F45DA7D-1131-4E26-9492-4FBD0DAD9A79}
 		{80CE1130-E903-41D2-AF93-500B2FDA6AAC} = {9F45DA7D-1131-4E26-9492-4FBD0DAD9A79}
 		{EB99B462-0DFA-4F88-80CA-31CFD72B39DD} = {702919F4-2CBA-407E-9A29-9F7E95A660A5}
+		{5EA52F9E-8832-46F0-918E-2118DF60C176} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {649B2EF0-52DC-4556-A0A1-66415B9ACA90}
