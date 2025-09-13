@@ -1,7 +1,14 @@
+using Aspire.Hosting;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Register only the Users API for now since other projects are not present in this solution
-builder.AddProject<Projects.HoneyHub_Users_Api>("honeyhub-users-api")
-       .WithExternalHttpEndpoints();
+// keep the SA password out of source (set via user-secrets on AppHost project)
+var saPassword = builder.AddParameter("SqlSaPassword", secret: true);
+
+// Users API points to your existing local SQL (Docker Desktop) on localhost:1433
+builder.AddProject<Projects.HoneyHub_Users_Api>("usersapi")
+    .WithEnvironment(
+        "ConnectionStrings__DefaultConnection",
+        $"Server=localhost,1433;Database=HoneyHub.Users.Database;User ID=sa;Password={saPassword};Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True");
 
 builder.Build().Run();

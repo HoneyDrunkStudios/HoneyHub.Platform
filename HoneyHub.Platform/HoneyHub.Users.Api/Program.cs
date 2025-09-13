@@ -12,12 +12,11 @@ using HoneyHub.Users.AppService.Services.Validators.Users;
 using HoneyHub.Users.DataService.Context;
 using HoneyHub.Users.DataService.DataServices.Subscriptions;
 using HoneyHub.Users.DataService.DataServices.Users;
-using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Key Vault config provider (CLI in Dev, Default in Azure)
+// Key Vault
 var kvName = builder.Configuration["KeyVault:Name"];
 var orgPrefix = builder.Configuration["KeyVault:OrgPrefix"] ?? "Org";
 var service = builder.Configuration["KeyVault:Service"] ?? "UsersApi";
@@ -37,22 +36,16 @@ if (!string.IsNullOrWhiteSpace(kvName))
     );
 }
 
+// Dev overrides AFTER Key Vault (uses appsettings.Development.json/env)
+builder.AddDevConfigOverrides();
+
 builder.AddServiceDefaults();
 
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
-builder.Services.AddDbContext<UsersContext>(options =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    if (string.IsNullOrWhiteSpace(connectionString))
-    {
-        throw new InvalidOperationException(
-            "Database connection string 'DefaultConnection' is not configured. " +
-            "Please ensure the connection string is set via Key Vault, appsettings, or environment variables.");
-    }
-    options.UseSqlServer(connectionString);
-});
+// DbContext wired for dev/local + container swap
+builder.Services.AddUsersDbWithLocalDev(builder.Configuration, builder.Environment);
 
 builder.Services.AddScoped<HoneyHub.Core.DataService.Context.BaseContext>(provider =>
     provider.GetRequiredService<UsersContext>());
@@ -73,9 +66,8 @@ builder.WebHost.UseSentry(o =>
 {
     o.Dsn = builder.Configuration["Sentry:Dsn"];
     o.Environment = builder.Environment.EnvironmentName;
-    var isDevelopment = builder.Environment.IsDevelopment();
-    o.TracesSampleRate = builder.Configuration.GetValue("Sentry:TracesSampleRate", isDevelopment ? 1.0 : 0.2);
-    o.ProfilesSampleRate = builder.Configuration.GetValue("Sentry:ProfilesSampleRate", isDevelopment ? 1.0 : 0.1);
+    o.TracesSampleRate = builder.Configuration.GetValue("Sentry:TracesSampleRate", 1.0);
+    o.ProfilesSampleRate = builder.Configuration.GetValue("Sentry:ProfilesSampleRate", 1.0);
     o.SendDefaultPii = false;
 });
 
@@ -87,7 +79,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference("/docs", o =>
-         o.WithTitle("HoneyHub API").WithDarkMode(true));
+        o.WithTitle("HoneyHub API").WithDarkMode(true));
 }
 
 var runningInContainer = string.Equals(
@@ -100,6 +92,9 @@ if (!runningInContainer)
     app.UseHttpsRedirection();
 }
 
+// dev-only fail-fast DB connectivity
+await app.EnsureDbConnectivityAsync();
+
 app.MapUsersEndpoints();
 
-app.Run();
+await app.RunAsync();
