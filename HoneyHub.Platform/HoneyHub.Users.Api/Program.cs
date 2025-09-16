@@ -5,9 +5,7 @@ using HoneyHub.Platform.ServiceDefaults;
 using HoneyHub.Users.Api.Endpoints;
 using HoneyHub.Users.Api.Extensions;
 using HoneyHub.Users.Api.Infrastructure;
-using HoneyHub.Users.AppService.Extensions;
 using HoneyHub.Users.DataService.Context;
-using HoneyHub.Users.DataService.Extensions;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);

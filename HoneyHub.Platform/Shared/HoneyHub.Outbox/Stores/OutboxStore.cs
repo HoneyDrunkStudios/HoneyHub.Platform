@@ -1,15 +1,13 @@
-using System.Text.Json;
 using HoneyHub.Outbox.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace HoneyHub.Outbox.Stores;
 
-public sealed class OutboxStore<TDbContext> : Abstractions.IOutboxStore where TDbContext : DbContext
+public sealed class OutboxStore<TDbContext>(TDbContext db) : Abstractions.IOutboxStore where TDbContext : DbContext
 {
-    private readonly TDbContext _db;
+    private readonly TDbContext _db = db;
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
-
-    public OutboxStore(TDbContext db) => _db = db;
 
     public Task EnqueueAsync(
         string eventType,

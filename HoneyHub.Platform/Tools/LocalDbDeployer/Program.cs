@@ -1,9 +1,9 @@
-using System.Diagnostics;
-using System.Text;
-using System.Xml.Linq;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.SqlServer.Dac;
+using System.Diagnostics;
+using System.Text;
+using System.Xml.Linq;
 
 Console.WriteLine("=== HoneyHub Local DB Deployer ===");
 
@@ -15,8 +15,8 @@ var config = new ConfigurationBuilder()
 var server = config["Server"] ?? "localhost,1433";
 var user = config["User"] ?? "sa";
 var password = config["Password"];
-var encrypt = bool.TryParse(config["Encrypt"], out var e) ? e : true;
-var trust = bool.TryParse(config["TrustServerCertificate"], out var t) ? t : true;
+var encrypt = !bool.TryParse(config["Encrypt"], out var e) || e;
+var trust = !bool.TryParse(config["TrustServerCertificate"], out var t) || t;
 var buildConfig = config["Configuration"] ?? "Debug";
 
 if (string.IsNullOrWhiteSpace(password))
@@ -146,10 +146,7 @@ static string BuildDacpac(string sqlprojPath, string configuration)
                           .OrderByDescending(File.GetLastWriteTimeUtc)
                           .FirstOrDefault();
 
-    if (dacpac is null)
-        throw new Exception($"No .dacpac produced for {sqlprojPath}");
-
-    return dacpac;
+    return dacpac is null ? throw new Exception($"No .dacpac produced for {sqlprojPath}") : dacpac;
 }
 
 static void PublishDacpac(string dacpacPath, string connectionString)

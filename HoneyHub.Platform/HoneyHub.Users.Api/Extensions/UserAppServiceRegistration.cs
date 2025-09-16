@@ -3,7 +3,7 @@ using HoneyHub.Users.AppService.Services.SecurityServices;
 using HoneyHub.Users.AppService.Services.Users;
 using HoneyHub.Users.AppService.Services.Validators.Users;
 
-namespace HoneyHub.Users.AppService.Extensions;
+namespace HoneyHub.Users.Api.Extensions;
 
 public static class UserAppServiceRegistration
 {
