@@ -3,16 +3,10 @@ using Azure.Security.KeyVault.Secrets;
 
 namespace HoneyHub.Users.Api.Infrastructure;
 
-public sealed class DualPrefixKeyVaultSecretManager : KeyVaultSecretManager
+public sealed class DualPrefixKeyVaultSecretManager(string orgPrefix, string serviceEnvPrefix) : KeyVaultSecretManager
 {
-    private readonly string _orgPrefixWithSep;
-    private readonly string _svcEnvPrefixWithSep;
-
-    public DualPrefixKeyVaultSecretManager(string orgPrefix, string serviceEnvPrefix)
-    {
-        _orgPrefixWithSep = (orgPrefix ?? "Org") + "--";
-        _svcEnvPrefixWithSep = serviceEnvPrefix + "--";
-    }
+    private readonly string _orgPrefixWithSep = (orgPrefix ?? "Org") + "--";
+    private readonly string _svcEnvPrefixWithSep = serviceEnvPrefix + "--";
 
     public override bool Load(SecretProperties sp) =>
         sp.Name.StartsWith(_orgPrefixWithSep, StringComparison.OrdinalIgnoreCase) ||

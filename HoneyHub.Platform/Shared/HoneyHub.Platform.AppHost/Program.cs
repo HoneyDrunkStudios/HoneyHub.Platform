@@ -11,4 +11,6 @@ builder.AddProject<Projects.HoneyHub_Users_Api>("usersapi")
         "ConnectionStrings__DefaultConnection",
         $"Server=localhost,1433;Database=HoneyHub.Users.Database;User ID=sa;Password={saPassword};Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True");
 
+builder.AddProject<Projects.HoneyHub_Admin>("honeyhub-admin");
+
 builder.Build().Run();

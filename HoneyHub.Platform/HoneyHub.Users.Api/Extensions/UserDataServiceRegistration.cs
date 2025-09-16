@@ -3,7 +3,7 @@ using HoneyHub.Users.DataService.Context;
 using HoneyHub.Users.DataService.DataServices.Subscriptions;
 using HoneyHub.Users.DataService.DataServices.Users;
 
-namespace HoneyHub.Users.DataService.Extensions;
+namespace HoneyHub.Users.Api.Extensions;
 
 public static class UserDataServiceRegistration
 {
