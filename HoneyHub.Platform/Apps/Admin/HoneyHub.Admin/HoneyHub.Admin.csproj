@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\HoneyHub.Logging\HoneyHub.Logging.csproj" />
     <ProjectReference Include="..\..\..\Shared\HoneyHub.Platform.ServiceDefaults\HoneyHub.Platform.ServiceDefaults.csproj" />
   </ItemGroup>
 
