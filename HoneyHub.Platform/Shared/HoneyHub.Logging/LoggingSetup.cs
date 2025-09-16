@@ -11,6 +11,7 @@ using Serilog.Enrichers.Span;
 using Serilog.Formatting.Compact;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,8 +34,16 @@ public static class LoggingSetup
     /// <returns>The same <paramref name="builder"/> instance for chaining.</returns>
     public static IHostApplicationBuilder AddHoneyHubSerilog(this IHostApplicationBuilder builder, Action<LoggerConfiguration>? configure = null)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         var applicationName = builder.Environment.ApplicationName;
         var envTier = builder.Configuration["HONEYHUB_ENV"] ?? "Unknown";
+
+        var entry = Assembly.GetEntryAssembly();
+        var appVersion =
+            entry?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion // e.g., 1.2.3+commitsha
+            ?? entry?.GetName().Version?.ToString()
+            ?? "0.0.0-local";
 
         var loggerConfiguration = new LoggerConfiguration()
             .ReadFrom.Configuration(builder.Configuration)
@@ -46,7 +55,7 @@ public static class LoggingSetup
             .Enrich.WithSpan()
             .Enrich.WithProperty("Application", applicationName)
             .Enrich.WithProperty("EnvTier", envTier)
-            .Enrich.WithProperty("AppVersion", typeof(LoggingSetup).Assembly.GetName().Version?.ToString());
+            .Enrich.WithProperty("AppVersion", appVersion);
 
         if (!HasWriteToConfigured(builder.Configuration))
             loggerConfiguration.WriteTo.Console(new RenderedCompactJsonFormatter());
@@ -54,12 +63,9 @@ public static class LoggingSetup
         configure?.Invoke(loggerConfiguration);
 
         Log.Logger = loggerConfiguration.CreateLogger();
-
         builder.Logging.ClearProviders();
         builder.Logging.AddSerilog(Log.Logger, dispose: true);
-
         builder.Services.AddHostedService(_ => new DelegatingHostedService(onStop: () => Log.CloseAndFlush()));
-
         return builder;
     }
 
