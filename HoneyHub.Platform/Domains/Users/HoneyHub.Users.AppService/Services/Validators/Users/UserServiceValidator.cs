@@ -71,7 +71,13 @@ public class UserServiceValidator(
     /// Validates password user creation request for business rule compliance.
     /// Focuses on domain-specific rules as technical validation is handled by FluentValidation.
     /// </summary>
-    public void ValidatePasswordUserRequest(CreatePasswordUserRequest request) => ArgumentNullException.ThrowIfNull(request);// Domain-specific business rules can be added here// Basic field validation is now handled by FluentValidation// Example: Additional business rules could include:// - Username uniqueness checks (if not handled at database level)// - Domain-specific password policies beyond basic technical requirements// - Business-specific username patterns or restrictions
+    // Domain-specific business rules can be added here
+    // Basic field validation is now handled by FluentValidation
+    // Example: Additional business rules could include:
+    // - Username uniqueness checks (if not handled at database level)
+    // - Domain-specific password policies beyond basic technical requirements
+    // - Business-specific username patterns or restrictions
+    public void ValidatePasswordUserRequest(CreatePasswordUserRequest request) => ArgumentNullException.ThrowIfNull(request);
 
     /// <summary>
     /// Validates external user creation request for business rule compliance.
