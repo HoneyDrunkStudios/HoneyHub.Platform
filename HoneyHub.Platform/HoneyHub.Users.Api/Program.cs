@@ -1,6 +1,7 @@
 using Azure.Core;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using HoneyHub.Logging;
 using HoneyHub.Platform.ServiceDefaults;
 using HoneyHub.Users.Api.Endpoints;
 using HoneyHub.Users.Api.Extensions;
@@ -9,6 +10,12 @@ using HoneyHub.Users.DataService.Context;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddHoneyHubSerilog(cfg =>
+{
+    // optional per-app tuning; safe to leave empty
+    // cfg.MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning);
+});
 
 var kvName = builder.Configuration["KeyVault:Name"];
 var orgPrefix = builder.Configuration["KeyVault:OrgPrefix"] ?? "Org";

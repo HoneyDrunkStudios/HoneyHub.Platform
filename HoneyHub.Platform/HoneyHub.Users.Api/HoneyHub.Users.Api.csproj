@@ -13,11 +13,13 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
     <PackageReference Include="HoneyHub.Users.Api.Sdk" Version="1.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.8.3" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.8.4" />
     <PackageReference Include="Sentry.AspNetCore" Version="5.15.0" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Shared\HoneyHub.Logging\HoneyHub.Logging.csproj" />
     <ProjectReference Include="..\Shared\HoneyHub.Outbox\HoneyHub.Outbox.csproj" />
     <ProjectReference Include="..\Shared\HoneyHub.Platform.ServiceDefaults\HoneyHub.Platform.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Domains\Users\HoneyHub.Users.AppService\HoneyHub.Users.AppService.csproj" />

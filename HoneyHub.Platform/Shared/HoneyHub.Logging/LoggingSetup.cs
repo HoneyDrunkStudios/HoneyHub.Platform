@@ -1,4 +1,3 @@
-// FILE: Shared/HoneyHub.Logging/LoggingSetup.cs
 namespace HoneyHub.Logging;
 
 using Microsoft.AspNetCore.Builder;
@@ -8,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Enrichers.Span;
 using Serilog.Formatting.Compact;
 using System.Diagnostics;
 using System.Linq;
@@ -33,9 +33,8 @@ public static class LoggingSetup
     /// <returns>The same <paramref name="builder"/> instance for chaining.</returns>
     public static IHostApplicationBuilder AddHoneyHubSerilog(this IHostApplicationBuilder builder, Action<LoggerConfiguration>? configure = null)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-
         var applicationName = builder.Environment.ApplicationName;
+        var envTier = builder.Configuration["HONEYHUB_ENV"] ?? "Unknown";
 
         var loggerConfiguration = new LoggerConfiguration()
             .ReadFrom.Configuration(builder.Configuration)
@@ -44,23 +43,21 @@ public static class LoggingSetup
             .Enrich.WithMachineName()
             .Enrich.WithProcessId()
             .Enrich.WithThreadId()
-            .Enrich.WithProperty("Application", applicationName);
+            .Enrich.WithSpan()
+            .Enrich.WithProperty("Application", applicationName)
+            .Enrich.WithProperty("EnvTier", envTier)
+            .Enrich.WithProperty("AppVersion", typeof(LoggingSetup).Assembly.GetName().Version?.ToString());
 
-        // Provide a JSON Console sink when no sinks are configured in settings.
         if (!HasWriteToConfigured(builder.Configuration))
-        {
             loggerConfiguration.WriteTo.Console(new RenderedCompactJsonFormatter());
-        }
 
         configure?.Invoke(loggerConfiguration);
 
         Log.Logger = loggerConfiguration.CreateLogger();
 
-        // Replace default providers and use Serilog for Microsoft.Extensions.Logging
         builder.Logging.ClearProviders();
         builder.Logging.AddSerilog(Log.Logger, dispose: true);
 
-        // Ensure Serilog flushes on clean shutdown.
         builder.Services.AddHostedService(_ => new DelegatingHostedService(onStop: () => Log.CloseAndFlush()));
 
         return builder;
