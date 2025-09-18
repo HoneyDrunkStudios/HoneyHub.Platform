@@ -7,6 +7,10 @@ using HoneyHub.Users.Api.Endpoints;
 using HoneyHub.Users.Api.Extensions;
 using HoneyHub.Users.Api.Infrastructure;
 using HoneyHub.Users.DataService.Context;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +40,33 @@ if (!string.IsNullOrWhiteSpace(kvName))
     );
 }
 
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(rb =>
+        rb.AddService(
+            serviceName: builder.Environment.ApplicationName,
+            serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString()
+        )
+        .AddAttributes(
+        [
+            new KeyValuePair<string, object>("deployment.environment",
+                builder.Configuration["HONEYHUB_ENV"] ?? builder.Environment.EnvironmentName)
+        ]))
+    .WithTracing(t => t
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddSqlClientInstrumentation())
+    .WithMetrics(m => m
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddRuntimeInstrumentation()
+        .AddProcessInstrumentation());
+
+builder.Logging.AddOpenTelemetry(o =>
+{
+    o.IncludeScopes = true;
+    o.ParseStateValues = true;
+});
+
 builder.AddDevConfigOverrides();
 
 builder.AddServiceDefaults();
@@ -48,6 +79,8 @@ builder.Services.AddScoped<HoneyHub.Core.DataService.Context.BaseContext>(sp => 
 
 builder.Services.AddUsersDataServices();
 builder.Services.AddUsersAppServices(builder.Configuration);
+
+builder.Services.AddApiValidation();
 
 builder.WebHost.UseSentry(o =>
 {
