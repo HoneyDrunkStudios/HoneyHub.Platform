@@ -1,0 +1,28 @@
+﻿server:
+  http_listen_port: 3200
+  log_level: info
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http: {}
+        grpc: {}
+
+ingester:
+  # small, dev-friendly defaults
+  trace_idle_period: 10s       # how long to wait before cutting a block
+  max_block_bytes: 10485760    # 10 MB
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 24h       # keep local blocks for a day in dev
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/traces   # must match the container volume path
+    wal:
+      path: /var/tempo/wal
