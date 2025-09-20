@@ -10,6 +10,9 @@ common:
       chunks_directory: /loki/chunks
       rules_directory: /loki/rules
   replication_factor: 1
+  ring:
+    kvstore:
+      store: memberlist
 
 schema_config:
   configs:
@@ -20,6 +23,15 @@ schema_config:
       index:
         prefix: index_
         period: 24h
+
+limits_config:
+  # Allow using boltdb-shipper with native OTLP for dev by disabling structured metadata
+  allow_structured_metadata: false
+
+# Use in-process memberlist for rings instead of Consul to avoid external dependency in dev
+memberlist:
+  join_members: []
+  abort_if_cluster_join_fails: false
 
 ruler:
   alertmanager_url: http://localhost:9093

@@ -7,7 +7,6 @@ using HoneyHub.Users.Api.Endpoints;
 using HoneyHub.Users.Api.Extensions;
 using HoneyHub.Users.Api.Infrastructure;
 using HoneyHub.Users.DataService.Context;
-using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;

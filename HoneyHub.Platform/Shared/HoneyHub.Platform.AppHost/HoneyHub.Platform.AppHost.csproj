@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Apps\Admin\HoneyHub.Admin\HoneyHub.Admin.csproj" />
-    <ProjectReference Include="..\..\HoneyHub.Users.Api\HoneyHub.Users.Api.csproj" />
+    <ProjectReference Include="..\..\Domains\Users\HoneyHub.Users.Api\HoneyHub.Users.Api.csproj" />
   </ItemGroup>
 
 </Project>
