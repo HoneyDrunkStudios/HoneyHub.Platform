@@ -23,16 +23,11 @@ exporters:
   otlphttp/tempo:
     endpoint: http://tempo:4318
 
-  # Logs -> Loki (needs *contrib* collector image)
-  loki:
-    endpoint: http://loki:3100/loki/api/v1/push
-    labels:
-      resource:
-        service.name: service
-        deployment.environment: env
-      attributes:
-        log_severity: severity
-    # optional: format: json
+  # Logs -> Loki via native OTLP HTTP ingestion
+  # Using OTLP avoids the deprecated/removed 'loki' exporter in recent collector builds
+  otlphttp/loki:
+    endpoint: http://loki:3100
+    logs_endpoint: http://loki:3100/otlp/v1/logs
 
 service:
   pipelines:
@@ -47,4 +42,4 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [loki, debug]
+      exporters: [otlphttp/loki, debug]

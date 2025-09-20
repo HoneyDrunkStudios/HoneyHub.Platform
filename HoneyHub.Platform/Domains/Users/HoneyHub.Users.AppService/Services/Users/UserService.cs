@@ -51,6 +51,9 @@ public class UserService(
         _validator.ValidatePasswordUserRequest(request);
         var subscriptionPlanId = await _validator.ValidateAndGetSubscriptionPlanIdAsync(request.SubscriptionPlanId, cancellationToken);
 
+        if (await _userDataService.UserNameExistsAsync(request.Username.Trim().ToUpperInvariant(), cancellationToken))
+            throw new ArgumentException("Username is already taken.", nameof(request.Username));
+
         var salt = _passwordService.CreateSalt();
         var passwordHash = _passwordService.HashPassword(request.Password, salt);
         var combinedHash = $"{salt}:{passwordHash}";
@@ -122,6 +125,10 @@ public class UserService(
 
         _validator.ValidateExternalUserRequest(request);
         var subscriptionPlanId = await _validator.ValidateAndGetSubscriptionPlanIdAsync(request.SubscriptionPlanId, cancellationToken);
+
+        // Ensure username uniqueness check uses normalized value for consistency
+        if (await _userDataService.UserNameExistsAsync(request.Username.Trim().ToUpperInvariant(), cancellationToken))
+            throw new ArgumentException("Username is already taken.", nameof(request.Username));
 
         var user = new UserEntity
         {
@@ -201,6 +208,10 @@ public class UserService(
 
         _validator.ValidateAdminUserRequest(request);
         var subscriptionPlanId = await _validator.ValidateAndGetSubscriptionPlanIdAsync(request.SubscriptionPlanId, cancellationToken);
+
+        // Ensure username uniqueness check uses normalized value for consistency
+        if (await _userDataService.UserNameExistsAsync(request.Username.Trim().ToUpperInvariant(), cancellationToken))
+            throw new ArgumentException("Username is already taken.", nameof(request.Username));
 
         string? passwordHash = null;
         if (!string.IsNullOrWhiteSpace(request.Password))
