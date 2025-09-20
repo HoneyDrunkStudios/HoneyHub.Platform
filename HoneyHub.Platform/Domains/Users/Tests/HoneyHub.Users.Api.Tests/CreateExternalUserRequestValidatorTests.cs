@@ -2,7 +2,7 @@ using FluentAssertions;
 using HoneyHub.Users.Api.Sdk.Requests;
 using HoneyHub.Users.Api.Validation.Users;
 
-namespace HoneyHub.Users.Api.Tests.Validation.Users;
+namespace HoneyHub.Users.Api.Tests;
 
 public class CreateExternalUserRequestValidatorTests
 {

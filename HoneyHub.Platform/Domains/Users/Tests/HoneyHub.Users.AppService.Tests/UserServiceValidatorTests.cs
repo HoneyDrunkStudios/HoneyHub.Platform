@@ -5,7 +5,7 @@ using HoneyHub.Users.DataService.Entities.Subscriptions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace HoneyHub.Users.AppService.Tests.Services.Validators.Users;
+namespace HoneyHub.Users.AppService.Tests;
 
 public class UserServiceValidatorTests
 {
@@ -50,7 +50,7 @@ public class UserServiceValidatorTests
         var ds = new Mock<ISubscriptionPlanDataService>();
         var sut = new UserServiceValidator(ds.Object, NullLogger<UserServiceValidator>.Instance);
 
-        var req = new HoneyHub.Users.Api.Sdk.Requests.AdminCreateUserRequest
+        var req = new Api.Sdk.Requests.AdminCreateUserRequest
         {
             Username = "admin",
             Email = "a@b.com",

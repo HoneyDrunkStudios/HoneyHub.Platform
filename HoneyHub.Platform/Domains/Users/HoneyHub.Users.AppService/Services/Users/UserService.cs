@@ -52,7 +52,7 @@ public class UserService(
         var subscriptionPlanId = await _validator.ValidateAndGetSubscriptionPlanIdAsync(request.SubscriptionPlanId, cancellationToken);
 
         if (await _userDataService.UserNameExistsAsync(request.Username.Trim().ToUpperInvariant(), cancellationToken))
-            throw new ArgumentException("Username is already taken.", nameof(request.Username));
+            throw new ArgumentException("Username is already taken.", nameof(request));
 
         var salt = _passwordService.CreateSalt();
         var passwordHash = _passwordService.HashPassword(request.Password, salt);
@@ -128,7 +128,7 @@ public class UserService(
 
         // Ensure username uniqueness check uses normalized value for consistency
         if (await _userDataService.UserNameExistsAsync(request.Username.Trim().ToUpperInvariant(), cancellationToken))
-            throw new ArgumentException("Username is already taken.", nameof(request.Username));
+            throw new ArgumentException("Username is already taken.", nameof(request));
 
         var user = new UserEntity
         {
@@ -211,7 +211,7 @@ public class UserService(
 
         // Ensure username uniqueness check uses normalized value for consistency
         if (await _userDataService.UserNameExistsAsync(request.Username.Trim().ToUpperInvariant(), cancellationToken))
-            throw new ArgumentException("Username is already taken.", nameof(request.Username));
+            throw new ArgumentException("Username is already taken.", nameof(request));
 
         string? passwordHash = null;
         if (!string.IsNullOrWhiteSpace(request.Password))

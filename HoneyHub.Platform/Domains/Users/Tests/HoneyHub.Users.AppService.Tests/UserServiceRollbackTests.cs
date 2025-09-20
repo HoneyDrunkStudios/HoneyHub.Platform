@@ -1,4 +1,3 @@
-using System.Threading;
 using FluentAssertions;
 using HoneyHub.Outbox.Abstractions;
 using HoneyHub.Users.Api.Sdk.Requests;
@@ -14,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace HoneyHub.Users.AppService.Tests.Services.Users;
+namespace HoneyHub.Users.AppService.Tests;
 
 public class UserServiceRollbackTests
 {

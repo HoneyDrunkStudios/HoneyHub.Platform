@@ -3,7 +3,7 @@ using HoneyHub.Users.AppService.Services.SecurityServices;
 using HoneyHub.Users.AppService.Services.SecurityServices.InternalModels;
 using Microsoft.Extensions.Options;
 
-namespace HoneyHub.Users.AppService.Tests.SecurityServices;
+namespace HoneyHub.Users.AppService.Tests;
 
 public class PasswordServiceMoreTests
 {

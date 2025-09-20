@@ -1,4 +1,3 @@
-using System.Threading;
 using FluentAssertions;
 using HoneyHub.Outbox.Abstractions;
 using HoneyHub.Users.Api.Sdk.Requests;
@@ -6,7 +5,6 @@ using HoneyHub.Users.AppService.Services.Users;
 using HoneyHub.Users.AppService.Services.Validators.Users;
 using HoneyHub.Users.DataService.Context;
 using HoneyHub.Users.DataService.DataServices.Users;
-using HoneyHub.Users.DataService.Entities.Identity;
 using HoneyHub.Users.DataService.Entities.Subscriptions;
 using HoneyHub.Users.DataService.Entities.Users;
 using Microsoft.Data.Sqlite;
@@ -14,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace HoneyHub.Users.AppService.Tests.Services.Users;
+namespace HoneyHub.Users.AppService.Tests;
 
 public class UserServiceExternalTests
 {
@@ -74,7 +72,7 @@ public class UserServiceExternalTests
                  .ReturnsAsync(plan.Id);
 
         var userData = new UserDataService(db);
-        var password = new Mock<HoneyHub.Users.AppService.Services.SecurityServices.IPasswordService>();
+        var password = new Mock<AppService.Services.SecurityServices.IPasswordService>();
 
         var svc = new UserService(db, outbox.Object, userData, password.Object, validator.Object, NullLogger<UserService>.Instance);
 
@@ -144,7 +142,7 @@ public class UserServiceExternalTests
                  .ReturnsAsync(plan.Id);
 
         var userData = new UserDataService(db);
-        var password = new Mock<HoneyHub.Users.AppService.Services.SecurityServices.IPasswordService>();
+        var password = new Mock<AppService.Services.SecurityServices.IPasswordService>();
 
         var svc = new UserService(db, outbox.Object, userData, password.Object, validator.Object, NullLogger<UserService>.Instance);
 

@@ -4,7 +4,7 @@ using HoneyHub.Users.DataService.DataServices.Users;
 using HoneyHub.Users.DataService.Entities.Users;
 using Microsoft.EntityFrameworkCore;
 
-namespace HoneyHub.Users.DataService.Tests.DataServices.Users;
+namespace HoneyHub.Users.DataService.Tests;
 
 public class UserDataServiceTests
 {

@@ -36,6 +36,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Yml", "Yml", "{80CE1130-E903-41D2-AF93-500B2FDA6AAC}"
 	ProjectSection(SolutionItems) = preProject
 		azure-pipelines-user-database.yml = azure-pipelines-user-database.yml
+		..\.github\workflows\github-pipelines-pr.yml = ..\.github\workflows\github-pipelines-pr.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{702919F4-2CBA-407E-9A29-9F7E95A660A5}"

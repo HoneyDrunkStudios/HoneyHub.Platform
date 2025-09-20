@@ -1,4 +1,3 @@
-using System.Threading;
 using FluentAssertions;
 using HoneyHub.Outbox.Abstractions;
 using HoneyHub.Users.Api.Sdk.Requests;
@@ -13,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace HoneyHub.Users.AppService.Tests.Services.Users;
+namespace HoneyHub.Users.AppService.Tests;
 
 public class UserServiceAdminTests
 {
@@ -72,7 +71,7 @@ public class UserServiceAdminTests
                  .ReturnsAsync(plan.Id);
 
         var userData = new UserDataService(db);
-        var password = new Mock<HoneyHub.Users.AppService.Services.SecurityServices.IPasswordService>();
+        var password = new Mock<Services.SecurityServices.IPasswordService>();
         password.Setup(p => p.CreateSalt()).Returns("c2FsdHNhbHQ=");
         password.Setup(p => p.HashPassword("Str0ng!Pass", "c2FsdHNhbHQ=")).Returns(Convert.ToBase64String(new byte[16]));
 
@@ -105,7 +104,7 @@ public class UserServiceAdminTests
                  .Throws(new ArgumentException("Password must be specified for admin user creation."));
 
         var userData = new UserDataService(db);
-        var password = new Mock<HoneyHub.Users.AppService.Services.SecurityServices.IPasswordService>();
+        var password = new Mock<Services.SecurityServices.IPasswordService>();
         var svc = new UserService(db, outbox.Object, userData, password.Object, validator.Object, NullLogger<UserService>.Instance);
 
         var req = new AdminCreateUserRequest
